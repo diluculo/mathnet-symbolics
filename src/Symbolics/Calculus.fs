@@ -24,18 +24,35 @@ module Calculus =
         | Function (Exp, x) as f -> (differentiate symbol x) * f
         | Function (Ln, x) -> (differentiate symbol x) / x
         | Function (Log, x) -> (differentiate symbol ((ln x) / (ln 10Q)))
+
         | Function (Sin, x) -> (differentiate symbol x) * cos(x)
         | Function (Cos, x) -> -(differentiate symbol x) * sin(x)
-        | Function (Tan, x) -> 2*(differentiate symbol x) / (cos(2*x)+1)
-        | Function (Cosh, x) -> (differentiate symbol x) * sinh (x)
+        | Function (Tan, x) -> 2 * (differentiate symbol x) / (cos(2 * x) + 1)
+        | Function (Csc, x) -> -(differentiate symbol x)  * (cot(x) * csc(x))
+        | Function (Sec, x) -> (differentiate symbol x)  * (tan(x) * sec(x))
+        | Function (Cot, x) -> 2 * (differentiate symbol x) / (cos(2 * x) - 1)
+
+        | Function (Asin, x) -> (differentiate symbol x) / (sqrt(1Q - pow x 2Q))
+        | Function (Acos, x) -> -(differentiate symbol x) / (sqrt(1Q - pow x 2Q))
+        | Function (Atan, x) -> (differentiate symbol x) / (1Q + pow x 2Q)
+        | Function (Acsc, x) -> -(differentiate symbol x) / ((sqrt(1Q - 1Q / pow x 2Q) * pow x 2Q))
+        | Function (Asec, x) -> (differentiate symbol x) / ((sqrt(1Q - 1Q / pow x 2Q) * pow x 2Q))
+        | Function (Acot, x) -> -(differentiate symbol x) / (1Q + pow x 2Q)
+
         | Function (Sinh, x) -> (differentiate symbol x) * cosh (x)
-        | Function (Tanh, x) -> 2*(differentiate symbol x) / (cosh(2*x)+1)
-        | Function (Asin, x) -> (1Q/sqrt(1Q+pow x 2Q)) * (differentiate symbol x)
-        | Function (Acos, x) -> (-1Q/sqrt(1Q+pow x 2Q)) * (differentiate symbol x)
-        | Function (Atan, x) -> (1Q/1Q+pow x 2Q) * (differentiate symbol x)
-        | Function (Cot, x) -> (-1Q/(sin(x) * sin(x))) * (differentiate symbol x)
-        | Function (Csc, x) -> (-cot(x) * csc(x)) * (differentiate symbol x)
-        | Function (Sec, x) -> (tan(x) * sec(x)) * (differentiate symbol x)
+        | Function (Cosh, x) -> (differentiate symbol x) * sinh (x)
+        | Function (Tanh, x) -> 2 * (differentiate symbol x) / (cosh(2 * x) + 1)
+        | Function (Csch, x) -> (differentiate symbol x) * (-coth(x) * csch(x))
+        | Function (Sech, x) -> (differentiate symbol x) * (-tanh(x) * sech(x))
+        | Function (Coth, x) -> -2 * (differentiate symbol x) / (cosh(2 * x) - 1)
+
+        | Function (Asinh, x) -> (differentiate symbol x) / (sqrt(pow x 2Q + 1Q))
+        | Function (Acosh, x) -> (differentiate symbol x) / (sqrt(x - 1Q) * sqrt(x + 1Q))
+        | Function (Atanh, x) -> (differentiate symbol x) / (1Q - pow x 2Q)
+        | Function (Acsch, x) -> (differentiate symbol x) / (sqrt(1Q + 1Q / pow x 2Q) * pow x 2Q)
+        | Function (Asech, x) -> (differentiate symbol x) * (sqrt((1Q - x) / (x + 1Q))) / ((x - 1Q) * x)
+        | Function (Acoth, x) -> (differentiate symbol x) / (1Q - pow x 2Q)
+
         | Function (Abs, _) -> failwith "not supported"
         | FunctionN (Atan, [x; y]) -> differentiate symbol (tan (x / y))
         | FunctionN (Log, [b; x]) -> differentiate symbol ((ln x) / (ln b))

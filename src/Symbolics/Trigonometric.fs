@@ -78,7 +78,11 @@ module Trigonometric =
                 | Function (Sin, a), Function (Sin, b) -> cos(a-b)/2 - cos(a+b)/2
                 | Function (Cos, a), Function (Cos, b) -> cos(a+b)/2 + cos(a-b)/2
                 | Function (Sin, a), Function (Cos, b) -> sin(a+b)/2 + sin(a-b)/2
-                | Function (Cos, a), Function (Sin, b) -> sin(a+b)/2 - sin(b-a)/2
+                | Function (Cos, a), Function (Sin, b) -> sin(a+b)/2 - sin(a-b)/2
+                | Function (Sinh, a), Function (Sinh, b) -> cosh(a+b)/2 - cosh(a-b)/2
+                | Function (Cosh, a), Function (Cosh, b) -> cosh(a+b)/2 + cosh(a-b)/2
+                | Function (Sinh, a), Function (Cosh, b) -> sinh(a-b)/2 + sinh(a+b)/2
+                | Function (Cosh, a), Function (Sinh, b) -> sinh(a+b)/2 - sinh(a-b)/2
                 | _ -> failwith "unexpected expression"
             | x::xs -> rules (x * productRules xs)
             | _ -> failwith "algorithm error 2"
@@ -102,6 +106,7 @@ module Trigonometric =
         | a -> a
 
     // Substitute Tan, Cot, Sec, Csc to sin and cos
+    // Substitute Tanh, Coth, Sech, Csch to sinh and cosh
     [<CompiledName("Substitute")>]
     let rec substitute x =
         match x with
@@ -109,6 +114,10 @@ module Trigonometric =
         | Function (Cot, a) -> let a' = substitute a in cos(a')/sin(a')
         | Function (Sec, a) -> let a' = substitute a in one/cos(a')
         | Function (Csc, a) -> let a' = substitute a in one/sin(a')
+        | Function (Tanh, a) -> let a' = substitute a in sinh(a')/cosh(a')
+        | Function (Coth, a) -> let a' = substitute a in cosh(a')/sinh(a')
+        | Function (Sech, a) -> let a' = substitute a in one/cosh(a')
+        | Function (Csch, a) -> let a' = substitute a in one/sinh(a')
         | Sum ax -> sum <| List.map substitute ax
         | Product ax -> product <| List.map substitute ax
         | Power (radix, p) -> (substitute radix) ** (substitute p)

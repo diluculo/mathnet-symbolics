@@ -592,6 +592,8 @@ let ``Algebaric Operators`` () =
     Trigonometric.contract (sin(x)**2*cos(x)**2) ==> "1/8 - cos(4*x)/8"
     Trigonometric.contract (cos(x)**4) ==> "3/8 + cos(2*x)/2 + cos(4*x)/8"
 
+    Trigonometric.contract (sinh(a)*cosh(b)) ==> "sinh(a + b)/2 - sinh(-a + b)/2"
+
     Trigonometric.simplify ((cos(x)+sin(x))**4 + (cos(x)-sin(x))**4 + cos(4*x) - 3) ==> "0"
 
     Trigonometric.substitute (tan(x)) ==> "sin(x)/cos(x)"

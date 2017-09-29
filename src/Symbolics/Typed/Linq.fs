@@ -57,20 +57,35 @@ module Linq =
             | Values.Value v -> value v
             | Constant c -> constant c
             | Function(func, par) ->
-                let convertFunc : Function -> (Expression -> Expression) option = function
+                let convertFunc : Function -> (Expression -> Expression) option = function                    
+                    | Abs  -> Some abs
+                    | Ln   -> Some (mathCall1 "Log")
+                    | Log  -> Some (mathCall1 "Log10")
+                    | Exp  -> Some (mathCall1 "Exp")
                     | Sin  -> Some (mathCall1 "Sin")
                     | Cos  -> Some (mathCall1 "Cos")
                     | Tan  -> Some (mathCall1 "Tan")
+                    | Csc  -> Some (mathCall1 "Csc")
+                    | Sec  -> Some (mathCall1 "Sec")
+                    | Cot  -> Some (mathCall1 "Cot")
                     | Asin -> Some (mathCall1 "Asin")
                     | Acos -> Some (mathCall1 "Acos")
                     | Atan -> Some (mathCall1 "Atan")
-                    | Ln   -> Some (mathCall1 "Log")
-                    | Log  -> Some (mathCall1 "Log10") 
-                    | Sinh -> Some (mathCall1 "Sinh")
-                    | Cosh -> Some (mathCall1 "Cosh")
-                    | Tanh -> Some (mathCall1 "Tanh")
-                    | Exp  -> Some (mathCall1 "Exp")
-                    | Abs  -> Some abs
+                    | Acsc -> Some (mathCall1 "Acsc")
+                    | Asec -> Some (mathCall1 "Asec")
+                    | Acot -> Some (mathCall1 "Acot")                    
+                    | Sinh  -> Some (mathCall1 "Sinh")
+                    | Cosh  -> Some (mathCall1 "Cosh")
+                    | Tanh  -> Some (mathCall1 "Tanh")
+                    | Csch  -> Some (mathCall1 "Csch")
+                    | Sech  -> Some (mathCall1 "Sech")
+                    | Coth  -> Some (mathCall1 "Coth")
+                    | Asinh -> Some (mathCall1 "Asinh")
+                    | Acosh -> Some (mathCall1 "Acosh")
+                    | Atanh -> Some (mathCall1 "Atanh")
+                    | Acsch -> Some (mathCall1 "Acsch")
+                    | Asech -> Some (mathCall1 "Asech")
+                    | Acoth -> Some (mathCall1 "Acoth")
                     | _    -> None
                 let f = convertFunc func
                 let e = convertExpr par
