@@ -130,10 +130,10 @@ module Linq =
                 let baseE = convertExpr x
                 let exponE = convertExpr y
                 Option.map2 pow baseE exponE
-            | Sum(xs) ->
+             | Sum(xs) ->
                 let summands = List.map convertExpr xs
                 List.fold (Option.map2 add) (value Value.zero) summands
-            | Product(_) as p ->
+             | Product(_) as p ->
                 let n = numerator p
                 let d = denominator p
                 if isOne d then
@@ -142,7 +142,7 @@ module Linq =
                     let nExp = compileFraction n
                     let dExp = compileFraction d
                     Option.map2 div nExp dExp
-            | Undefined -> None
+             | Undefined -> None
         and compileFraction = function
                 | Product(xs) ->
                     let prods = List.map convertExpr xs

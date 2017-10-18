@@ -319,6 +319,40 @@ let ``Parse infix expressions`` () =
     Infix.parseOrUndefined "atan ( x , y )"  ==> "atan(x,y)"
     Infix.parseOrUndefined " atan ( - x, - y ) " ==> "atan(-x,-y)"
 
+    Infix.parseOrUndefined "asin(-1)" ==> "-π/2"
+    Infix.parseOrUndefined "asin(0)" ==> "0"
+    Infix.parseOrUndefined "asin(1)" ==> "π/2"
+
+    Infix.parseOrUndefined "acos(-1)" ==> "π"
+    Infix.parseOrUndefined "acos(0)" ==> "π/2"
+    Infix.parseOrUndefined "acos(1)" ==> "0"
+
+    Infix.parseOrUndefined "atan(-1)" ==> "-π/4"
+    Infix.parseOrUndefined "atan(0)" ==> "0"
+    Infix.parseOrUndefined "atan(1)" ==> "π/4"
+
+    Infix.parseOrUndefined "acsc(-1)" ==> "-π/2"
+    Infix.parseOrUndefined "acsc(0)" ==> "⧝"
+    Infix.parseOrUndefined "acsc(1)" ==> "π/2"
+
+    Infix.parseOrUndefined "asec(-1)" ==> "π"
+    Infix.parseOrUndefined "asec(0)" ==> "⧝"
+    Infix.parseOrUndefined "asec(1)" ==> "0"
+
+    Infix.parseOrUndefined "acot(-1)" ==> "-π/4"
+    Infix.parseOrUndefined "acot(0)" ==> "π/2"
+    Infix.parseOrUndefined "acot(1)" ==> "π/4"
+
+    Infix.parseOrUndefined "acsc(x)" ==> "acsc(x)"
+
+    // reflection
+    Infix.parseOrUndefined "asin(-x)" ==> "-asin(x)"
+    Infix.parseOrUndefined "acos(-x)" ==> "π - acos(x)"
+    Infix.parseOrUndefined "atan(-x)" ==> "-atan(x)"
+    Infix.parseOrUndefined "acsc(-x)" ==> "-acsc(x)"
+    Infix.parseOrUndefined "asec(-x)" ==> "π - asec(x)"
+    Infix.parseOrUndefined "acot(-x)" ==> "-acot(x)"
+
     Infix.parseOrUndefined "log(x)" ==> "log(x)"
     Infix.parseOrUndefined "log(x,y)" ==> "log(x,y)"
     Infix.parseOrUndefined "log(x,10)" ==> "log(x,10)"

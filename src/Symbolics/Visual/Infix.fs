@@ -197,11 +197,11 @@ module private InfixFormatter =
         | Sin -> "sin" | Cos -> "cos" | Tan -> "tan"
         | Cot -> "cot" | Sec -> "sec" | Csc -> "csc"
         | Acos -> "acos" | Asin -> "asin" | Atan -> "atan"
-        | Asec -> "asec" | Acsc -> "ascs" | Acot -> "acot"
+        | Asec -> "asec" | Acsc -> "acsc" | Acot -> "acot"
         | Sinh -> "sinh" | Cosh -> "cosh" | Tanh -> "tanh"
         | Coth -> "coth" | Sech -> "sech" | Csch -> "csch"
         | Acosh -> "acosh" | Asinh -> "asinh" | Atanh -> "atanh"
-        | Asech -> "asech" | Acsch -> "ascsh" | Acoth -> "acoth"
+        | Asech -> "asech" | Acsch -> "acsch" | Acoth -> "acoth"
 
     // priority: 1=additive 2=product 3=power
 

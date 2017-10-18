@@ -359,9 +359,11 @@ module Operators =
         | Zero -> one
         | x -> Function (Exp, x)
     let ln = function
+        | Zero -> negativeInfinity
         | One -> zero
         | x -> Function (Ln, x)
     let log10 = function
+        | Zero -> negativeInfinity
         | One -> zero
         | x -> Function (Log, x)
     let log basis x = FunctionN (Log, [basis; x])
@@ -381,31 +383,126 @@ module Operators =
         | Number n when n.IsNegative -> negate (Function (Tan, Number -n))
         | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Tan, multiply (Number -n) (Product ax)))
         | x -> Function (Tan, x)
-    let csc x = Function (Csc, x)
-    let sec x = Function (Sec, x)
-    let cot x = Function (Cot, x)
+    let csc = function
+        | Zero -> complexInfinity
+        | Number n when n.IsNegative -> negate (Function (Csc, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Csc, multiply (Number -n) (Product ax)))
+        | x -> Function (Csc, x)
+    let sec = function
+        | Zero -> one
+        | Number n when n.IsNegative -> Function (Sec, Number -n)
+        | Product ((Number n)::ax) when n.IsNegative -> Function (Sec, multiply (Number -n) (Product ax))
+        | x -> Function (Sec, x)
+    let cot = function
+        | Zero -> complexInfinity
+        | Number n when n.IsNegative -> negate (Function (Cot, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Cot, multiply (Number -n) (Product ax)))
+        | x -> Function (Cot, x)
 
-    let arcsin x = Function (Asin, x)
-    let arccos x = Function (Acos, x)
-    let arctan x = Function (Atan, x)
+    let arcsin = function
+        | Zero -> zero
+        | One -> divide pi two
+        | MinusOne -> negate (divide pi two)
+        | Number n when n.IsNegative -> negate (Function (Asin, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Asin, multiply (Number -n) (Product ax)))
+        | x -> Function (Asin, x)
+    let arccos = function
+        | Zero -> divide pi two
+        | One -> zero
+        | MinusOne -> pi
+        | Number n when n.IsNegative -> subtract (pi) (Function (Acos, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> subtract (pi) (Function (Acos, multiply (Number -n) (Product ax)))
+        | x -> Function (Acos, x)
+    let arctan = function
+        | Zero -> zero
+        | One -> divide pi (Number (BigRational.FromInt 4))
+        | MinusOne -> negate (divide pi (Number (BigRational.FromInt 4)))
+        | Number n when n.IsNegative -> negate (Function (Atan, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Atan, multiply (Number -n) (Product ax)))
+        | x -> Function (Atan, x)
     let arctan2 x y = FunctionN (Atan, [x;y])
-    let arccsc x = Function (Acsc, x)
-    let arcsec x = Function (Asec, x)
-    let arccot x = Function (Acot, x)
+    let arccsc = function
+        | Zero -> complexInfinity
+        | One -> divide pi two
+        | MinusOne -> negate (divide pi two)
+        | Number n when n.IsNegative -> negate (Function (Acsc, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Acsc, multiply (Number -n) (Product ax)))
+        | x -> Function (Acsc, x)
+    let arcsec = function
+        | Zero -> complexInfinity
+        | One -> zero
+        | MinusOne -> pi
+        | Number n when n.IsNegative -> subtract (pi) (Function (Asec, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> subtract (pi) (Function (Asec, multiply (Number -n) (Product ax)))
+        | x -> Function (Asec, x)
+    let arccot = function
+        | Zero -> divide pi two
+        | One -> divide pi (Number (BigRational.FromInt 4))
+        | MinusOne -> negate (divide pi (Number (BigRational.FromInt 4)))
+        | Number n when n.IsNegative -> negate (Function (Acot, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Acot, multiply (Number -n) (Product ax)))
+        | x -> Function (Acot, x)
 
-    let cosh x = Function (Cosh, x)
-    let sinh x = Function (Sinh, x)
-    let tanh x = Function (Tanh, x)
-    let csch x = Function (Csch, x)
-    let sech x = Function (Sech, x)
-    let coth x = Function (Coth, x)
+    let sinh = function
+        | Zero -> zero
+        | Number n when n.IsNegative -> negate (Function (Sinh, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Sinh, multiply (Number -n) (Product ax)))
+        | x -> Function (Sinh, x)
+    let cosh = function
+        | Zero -> one
+        | Number n when n.IsNegative -> Function (Cosh, Number -n)
+        | Product ((Number n)::ax) when n.IsNegative -> Function (Cosh, multiply (Number -n) (Product ax))
+        | x -> Function (Cosh, x)    
+    let tanh = function
+        | Zero -> zero
+        | Number n when n.IsNegative -> negate (Function (Tanh, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Tanh, multiply (Number -n) (Product ax)))
+        | x -> Function (Tanh, x)
+    let csch = function
+        | Zero -> complexInfinity
+        | Number n when n.IsNegative -> negate (Function (Csch, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Csch, multiply (Number -n) (Product ax)))
+        | x -> Function (Csch, x)
+    let sech = function
+        | Zero -> one
+        | Number n when n.IsNegative -> Function (Sech, Number -n)
+        | Product ((Number n)::ax) when n.IsNegative -> Function (Sech, multiply (Number -n) (Product ax))
+        | x -> Function (Sech, x)
+    let coth = function
+        | Zero -> complexInfinity
+        | Number n when n.IsNegative -> negate (Function (Coth, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Coth, multiply (Number -n) (Product ax)))
+        | x -> Function (Coth, x)
 
-    let arcsinh x = Function (Asinh, x)
-    let arccosh x = Function (Acosh, x)
-    let arctanh x = Function (Atanh, x)
-    let arccsch x = Function (Acsch, x)
-    let arcsech x = Function (Asech, x)
-    let arccoth x = Function (Acoth, x)
+    let arcsinh = function
+        | Zero -> zero
+        | Number n when n.IsNegative -> negate (Function (Asinh, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Asinh, multiply (Number -n) (Product ax)))
+        | x -> Function (Asinh, x)
+    let arccosh = function
+        | One -> zero
+        | x -> Function (Acosh, x)
+    let arctanh = function
+        | Zero -> zero
+        | Number n when n.IsNegative -> negate (Function (Atanh, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Atanh, multiply (Number -n) (Product ax)))
+        | x -> Function (Atanh, x)
+    let arccsch = function
+        | Zero -> complexInfinity
+        | One -> complexInfinity
+        | Number n when n.IsNegative -> negate (Function (Acsch, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Acsch, multiply (Number -n) (Product ax)))
+        | x -> Function (Acsch, x)
+    let arcsech = function
+        | Zero -> infinity
+        | One -> zero
+        | x -> Function (Asech, x)
+    let arccoth = function
+        | One -> infinity
+        | MinusOne -> negativeInfinity
+        | Number n when n.IsNegative -> negate (Function (Acoth, Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Acoth, multiply (Number -n) (Product ax)))
+        | x -> Function (Acoth, x)
 
     let apply f x =
         match f with
