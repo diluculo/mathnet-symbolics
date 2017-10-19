@@ -54,6 +54,7 @@ module Approximation =
     let abs = function
         | Real a -> Real (Math.Abs a)
         | Complex a -> Real (C.Abs a)
+
     let ln = function
         | Real a -> Real (Math.Log a)
         | Complex a -> Complex (C.Log a)
@@ -65,9 +66,11 @@ module Approximation =
         | Real v, Real w -> Real (Math.Log (v, w))
         | Real v, Complex w -> Complex (Complex.Log (w, v))
         | _ -> failwith "not supported"
+
     let exp = function
         | Real a -> Real (Math.Exp a)
         | Complex a -> Complex (C.Exp a)
+
     let sin = function
         | Real a -> Real (Math.Sin a)
         | Complex a -> Complex (C.Sin a)
@@ -85,7 +88,8 @@ module Approximation =
         | Complex a -> Complex (Complex.sec a)    
     let cot = function
         | Real a -> Real (Trig.Cot a)
-        | Complex a -> Complex (Complex.cot a)    
+        | Complex a -> Complex (Complex.cot a)
+
     let asin = function
         | Real a -> Real (Math.Asin a)
         | Complex a -> Complex (C.Asin a)
@@ -110,6 +114,7 @@ module Approximation =
     let acot = function
         | Real a -> Real (Math.Atan 1.0 / a)
         | Complex a -> Complex (C.Atan (C.Reciprocal a))
+
     let sinh = function
         | Real a -> Real (Math.Sinh a)
         | Complex a -> Complex (C.Sinh a)
@@ -128,6 +133,7 @@ module Approximation =
     let coth = function
         | Real a -> Real (Trig.Coth a)
         | Complex a -> Complex (Complex.coth a)
+
     let asinh = function
         | Real a -> Real (Trig.Asinh a)
         | Complex a -> Complex (Trig.Asinh a)

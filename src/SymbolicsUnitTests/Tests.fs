@@ -774,7 +774,6 @@ let ``Evaluate some expression to floating point numbers`` () =
     c.Real |> should (equalWithin 1e-15) 0.0
     c.Imaginary |> should (equalWithin 1e-15) 1.0
 
-
 [<Test>]
 let ``Primitive Equation Solver`` () =
 
