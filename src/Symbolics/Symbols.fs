@@ -9,6 +9,7 @@ type Function =
     | Asin | Acos | Atan | Acsc | Asec | Acot
     | Cosh | Sinh | Tanh | Csch | Sech | Coth
     | Acosh | Asinh | Atanh | Acsch | Asech | Acoth
+    | Factorial | Factorial2 | Gamma
 
 type Constant =
     | E

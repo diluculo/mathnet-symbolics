@@ -109,6 +109,7 @@ module private InfixParser =
         opp.AddOperator(InfixOperator("^", ws, 3, Associativity.Right, pow))
         opp.AddOperator(PrefixOperator("+", ws, 4, true, plus))
         opp.AddOperator(PrefixOperator("-", ws, 4, true, negate))
+        opp.AddOperator(PostfixOperator("!", ws, 5, true, factorial))
         expr
 
     let parser : Expression parser = ws >>. expression .>> eof
@@ -202,6 +203,7 @@ module private InfixFormatter =
         | Coth -> "coth" | Sech -> "sech" | Csch -> "csch"
         | Acosh -> "acosh" | Asinh -> "asinh" | Atanh -> "atanh"
         | Asech -> "asech" | Acsch -> "acsch" | Acoth -> "acoth"
+        | Factorial -> "factorial" | Factorial2 -> "factorial2" | Gamma -> "gamma"
 
     // priority: 1=additive 2=product 3=power
 

@@ -153,6 +153,11 @@ module Approximation =
         | Real a -> Real (Trig.Coth a)
         | Complex a -> Complex (Trig.Coth a)
 
+    let bigint(x:float) = bigint(x)
+
+    let gamma = function 
+        | Real a -> Real (SpecialFunctions.Gamma a)
+
     let apply f a =
         match f with
         | Abs -> abs a
@@ -183,6 +188,7 @@ module Approximation =
         | Acsch -> acsch a
         | Asech -> asech a
         | Acoth -> acoth a
+        | Gamma -> gamma a
 
     let applyN f xs =
         match f, xs with

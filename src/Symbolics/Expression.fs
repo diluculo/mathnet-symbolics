@@ -127,10 +127,20 @@ module Operators =
 
     open ExpressionPatterns
     open MathNet.Numerics
+    open MathNet.Symbolics
 
     let zero = Number BigRational.Zero
     let one = Number BigRational.One
     let two = Number (BigRational.FromInt 2)
+    let three = Number (BigRational.FromInt 3)
+    let four = Number (BigRational.FromInt 4)
+    let five = Number (BigRational.FromInt 5)
+    let six = Number (BigRational.FromInt 6)
+    let seven = Number (BigRational.FromInt 7)
+    let eight = Number (BigRational.FromInt 8)
+    let nine = Number (BigRational.FromInt 9)
+    let ten = Number (BigRational.FromInt 10)
+
     let minusOne = Number (BigRational.FromInt -1)
     let pi = Constant Pi
 
@@ -308,13 +318,13 @@ module Operators =
         | ComplexInfinity, _ | _, ComplexInfinity -> complexInfinity
         | PositiveInfinity, _ | _, PositiveInfinity -> infinity
         | NegativeInfinity, _ | _, NegativeInfinity -> negativeInfinity
-        | Values.Value a, b | b, Values.Value a -> valueMul a b
+        | Values.Value a, b | b, Values.Value a -> valueMul a b        
         | Product ((Values.Value a)::ax), Product ((Values.Value b)::bx) -> valueMul (Value.product (a, b)) (merge ax bx)
         | Product ((Values.Value a)::ax), Product bx | Product bx, Product ((Values.Value a)::ax) -> valueMul a (merge ax bx)
         | Product ((Values.Value a)::ax), b | b, Product ((Values.Value a)::ax) -> valueMul a (merge ax [b])
         | Product ax, Product bx -> merge ax bx
-        | Product ax, b -> merge ax [b]
-        | a, Product bx -> merge [a] bx
+        | Product ax, b -> merge ax [b]        
+        | a, Product bx -> merge [a] bx        
         | a, b -> merge [a] [b]
 
     and pow x y =
@@ -347,6 +357,15 @@ module Operators =
     let product (xs:Expression list) = if List.isEmpty xs then one else List.reduce multiply xs
     let productSeq (xs:Expression seq) = Seq.fold multiply one xs
 
+    let rec factBigInt(n:int): bigint =  
+        match n with
+        | 0 | 1 -> bigint(1)
+        | n -> bigint(n) * factBigInt(n - 1)
+    let rec fact2BigInt(n:int): bigint =  
+        match n with
+        | -1 | 0 | 1 -> bigint(1)
+        | n -> bigint(n) * fact2BigInt(n - 2)
+
     let root n x = pow x (pow n minusOne)
     let sqrt x = root two x
 
@@ -357,10 +376,12 @@ module Operators =
 
     let exp = function
         | Zero -> one
+        | One -> Constant E
         | x -> Function (Exp, x)
     let ln = function
         | Zero -> negativeInfinity
         | One -> zero
+        | Constant E -> one // ln(e) = 1
         | x -> Function (Ln, x)
     let log10 = function
         | Zero -> negativeInfinity
@@ -368,35 +389,144 @@ module Operators =
         | x -> Function (Log, x)
     let log basis x = FunctionN (Log, [basis; x])
 
-    let sin = function
-        | Zero -> zero
-        | Number n when n.IsNegative -> negate (Function (Sin, Number -n))
-        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Sin, multiply (Number -n) (Product ax)))
-        | x -> Function (Sin, x)
-    let cos = function
+    // return a Number normalized in [0, 2]
+    // n = p/q = 2*m + p'/q, so p' = p % 2*q
+    // ex) 5/2 -> 1/2
+    // ex) -11/2 -> -3/2 -> 1/2
+    let internal modTwo (n:BigRational) =
+        let divisor = (n.Denominator * 2I)
+        let p' = n.Numerator % divisor
+        if sign p' >= 0 then BigRational.FromBigIntFraction(p', n.Denominator)
+        else BigRational.FromBigIntFraction(p' + divisor, n.Denominator)
+
+    // With the help of lookup tables below, trigonometry functions evaluate
+    // automatically when arguments are some m/n*pi (with m, n integers) 
+    // ref) http://www.mathworks.com/help/symbolic/mupad_ref/sin.html?s_tid=gn_loc_drop
+    // ref) http://mathworld.wolfram.com/TrigonometryAngles.html
+    // ref) https://en.wikipedia.org/wiki/Trigonometric_constants_expressed_in_real_radicals    
+    let internal sineTable =
+        dict[(0N), zero; // sin(0*pi) = 0
+             (1N/2N), one; // sin(1/2*pi) = 1
+             (1N/3N), divide (sqrt three) two; // sqrt(3)/2
+             (1N/4N), divide one (sqrt two); // 1/sqrt(2)
+             (1N/5N), sqrt (subtract (divide five eight) (divide (sqrt five) eight)); // sqrt(5/8 - sqrt(5)/8)
+             (2N/5N), sqrt (add (divide five eight) (divide (sqrt five) eight)); // sqrt(5/8 + sqrt(5)/8)
+             (1N/6N), divide one two; // 1/2
+             (1N/8N), divide (sqrt (subtract two (sqrt two))) two; // sqrt(2 - sqrt(2))/2
+             (3N/8N), divide (sqrt (add two (sqrt two))) two; // sqrt(2 + sqrt(2))/2
+             (1N/10N), divide (subtract (sqrt five) one) four; // (sqrt(5) - 1)/4
+             (3N/10N), divide (add one (sqrt five)) four; // (1 + sqrt(5))/4
+             (1N/12N), divide (subtract (sqrt three) one) (multiply two (sqrt two)); // (sqrt(3) - 1)/(2*sqrt(2))
+             (5N/12N), divide (add one (sqrt three)) (multiply two (sqrt two)); // (1 + sqrt(3))/(2*sqrt(2))
+            ]
+    let internal tangentTable =
+        dict[(0N), zero; // 0
+             (1N/2N), complexInfinity; // ⧝
+             (1N/3N), sqrt three; // sqrt(3)
+             (1N/4N), one; // 1
+             (1N/5N), sqrt (subtract five (multiply two (sqrt five))) // sqrt(5 - 2*sqrt(5))
+             (2N/5N), sqrt (add five (multiply two (sqrt five))) // sqrt(5 + 2*sqrt(5))
+             (1N/6N), divide one (sqrt three); // 1/sqrt(3)
+             (1N/8N), subtract (sqrt two) one // sqrt(2) - 1
+             (3N/8N), add one (sqrt two); // 1 + sqrt(2)
+             (1N/10N), sqrt (subtract one (divide two (sqrt five))) // sqrt(1 - 2/sqrt(5))
+             (3N/10N), sqrt (add one (divide two (sqrt five))) // sqrt(1 + 2/sqrt(5))
+             (1N/12N), subtract two (sqrt three) // 2 - sqrt(3)
+             (5N/12N), add two (sqrt three); // 2 + sqrt(3)
+            ]
+
+    let rec sin x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // wrap n into [0, 2]
+            match n' with
+            | n' when n'.IsInteger -> zero
+            | n' when n' > 1N -> negate (exactValue (n' - 1N)) // shift by pi, sin(x) = -sin(x + pi)
+            | n' when n' > 1N/2N -> exactValue (1N - n') // reflection at pi/2, sin(x) = sin(pi - x)
+            | n' when sineTable.ContainsKey(n') -> sineTable.[n']
+            | _ -> Function (Sin, multiply (Number n') (Constant Pi))
+        match x with
+        | Zero | Constant Pi -> zero
+        | Number n when n.IsNegative -> negate (sin (Number -n))
+        | Product ((Number n)::ax) when n.IsNegative -> negate (sin (multiply (Number -n) (product ax)))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
+        | _ -> Function (Sin, x)
+    let rec cos x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // make sure n in [0, 2]
+            match n' with
+            | n' when (n' + 1N/2N).IsInteger -> zero
+            | n' when n' > 1N -> negate (exactValue (n' - 1N)) // shift by pi, cos(x) = -cos(x + pi)
+            | n' when n' > 1N/2N -> negate (exactValue (1N - n')) // reflection at pi/2, cos(x) = -cos(pi - x)
+            | n' when sineTable.ContainsKey(1N/2N - n') -> sineTable.[1N/2N - n'] // reflection at pi/4, cos(x) = sin(pi/2 - x)
+            | _ -> Function (Cos, multiply (Number n') (Constant Pi))
+        match x with
         | Zero -> one
-        | Number n when n.IsNegative -> Function (Cos, Number -n)
-        | Product ((Number n)::ax) when n.IsNegative -> Function (Cos, multiply (Number -n) (Product ax))
+        | Constant Pi -> minusOne
+        | Number n when n.IsNegative -> cos (Number -n)
+        | Product ((Number n)::ax) when n.IsNegative -> cos (multiply (Number -n) (Product ax))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
         | x -> Function (Cos, x)
-    let tan = function
-        | Zero -> zero
+    let rec tan x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // make sure n in [0, 2]
+            match n' with
+            | n' when n'.IsInteger -> zero
+            | n' when n' > 1N -> exactValue (n' - 1N) // shift by pi, tan(x) = tan(x + pi)
+            | n' when n' > 1N/2N -> negate (exactValue (1N - n')) // reflection at pi/2, tan(x) = -tan(pi - x)
+            | n' when tangentTable.ContainsKey(n') -> tangentTable.[n']
+            | _ -> Function (Tan, multiply (Number n') (Constant Pi))
+        match x with
+        | Zero | Constant Pi -> zero
         | Number n when n.IsNegative -> negate (Function (Tan, Number -n))
         | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Tan, multiply (Number -n) (Product ax)))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
         | x -> Function (Tan, x)
-    let csc = function
+    let rec csc x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // wrap n into [0, 2]
+            match n' with
+            | n' when n'.IsInteger -> complexInfinity
+            | n' when n' > 1N -> negate (exactValue (n' - 1N)) // shift by pi, csc(x) = -csc(x + pi)
+            | n' when n' > 1N/2N -> exactValue (1N - n') // reflection at pi/2, csc(x) = csc(pi - x)
+            | n' when sineTable.ContainsKey(n') -> invert sineTable.[n']
+            | _ -> Function (Csc, multiply (Number n') (Constant Pi))
+        match x with
         | Zero -> complexInfinity
+        | Constant Pi -> complexInfinity
         | Number n when n.IsNegative -> negate (Function (Csc, Number -n))
         | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Csc, multiply (Number -n) (Product ax)))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
         | x -> Function (Csc, x)
-    let sec = function
+    let sec x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // make sure n in [0, 2]
+            match n' with
+            | n' when (n' + 1N/2N).IsInteger -> complexInfinity
+            | n' when n' > 1N -> negate (exactValue (n' - 1N)) // shift by pi, sec(x) = -sec(x + pi)
+            | n' when n' > 1N/2N -> negate (exactValue (1N - n')) // reflection at pi/2, sec(x) = -sec(pi - x)
+            | n' when sineTable.ContainsKey(1N/2N - n') -> invert sineTable.[1N/2N - n'] // reflection at pi/4, sec(x) = 1/sin(pi/2 - x)
+            | _ -> Function (Sec, multiply (Number n') (Constant Pi))
+        match x with
         | Zero -> one
+        | Constant Pi -> minusOne
         | Number n when n.IsNegative -> Function (Sec, Number -n)
         | Product ((Number n)::ax) when n.IsNegative -> Function (Sec, multiply (Number -n) (Product ax))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
         | x -> Function (Sec, x)
-    let cot = function
-        | Zero -> complexInfinity
+    let cot x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // make sure n in [0, 2]
+            match n' with
+            | n' when n'.IsInteger -> complexInfinity
+            | n' when n' > 1N -> exactValue (n' - 1N) // shift by pi, cot(x) = cot(x + pi)
+            | n' when n' > 1N/2N -> negate (exactValue (1N - n')) // reflection at pi/2, cot(x) = -cot(pi - x)
+            | n' when tangentTable.ContainsKey(n') -> invert tangentTable.[n']
+            | _ -> Function (Cot, multiply (Number n') (Constant Pi))
+        match x with
+        | Zero | Constant Pi -> complexInfinity
         | Number n when n.IsNegative -> negate (Function (Cot, Number -n))
         | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Cot, multiply (Number -n) (Product ax)))
+        | Product [Number n; Constant Pi] -> exactValue n // now n > 0
         | x -> Function (Cot, x)
 
     let arcsin = function
@@ -504,6 +634,19 @@ module Operators =
         | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Acoth, multiply (Number -n) (Product ax)))
         | x -> Function (Acoth, x)
 
+    let factorial = function
+        | Zero -> one
+        | One -> one
+        | Number n when n.IsNegative -> complexInfinity
+        | Number n when n.IsInteger -> fromInteger (factBigInt (BigRational.ToInt32 n))
+        | Product ((Number n)::ax) when n.IsNegative -> complexInfinity        
+        | x -> Function (Gamma, add x one)
+    let gamma = function
+        | Zero -> complexInfinity
+        | One -> one
+        | MinusOne -> complexInfinity
+        | x -> Function (Gamma, x)
+
     let apply f x =
         match f with
         | Abs -> abs x
@@ -534,7 +677,8 @@ module Operators =
         | Acsch -> arccsch x
         | Asech -> arcsech x
         | Acoth -> arccoth x
-        
+        | Factorial -> factorial x
+        | Gamma -> gamma x
 
     let applyN (f: Function) (xs: Expression list) =
         match f, xs with
@@ -608,6 +752,9 @@ type Expression with
     static member ArcCsch (x) = Operators.arccsch x
     static member ArcSech (x) = Operators.arcsech x
     static member ArcCoth (x) = Operators.arccoth x
+
+    static member Factorial (x) = Operators.factorial x
+    static member Gamma (x) = Operators.gamma x
 
     static member Apply (f, x) = Operators.apply f x
     static member ApplyN (f, xs) = Operators.applyN f xs

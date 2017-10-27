@@ -1106,3 +1106,31 @@ let ``Expression to delegate compilation``() =
 
     let expr9' = x + 1
     (Compile.compileComplexExpression1OrThrow expr9' symX).Invoke(System.Numerics.Complex.One) --> toComplex 2.0
+
+[<Test>]
+let ``Test for special functions``() =
+
+    let expr0 = Infix.parseOrUndefined "sin(pi + x)"
+    expr0 ==> "-(1 + sqrt(3))/(2*sqrt(2))"
+
+    let expr1 = Infix.parseOrUndefined "5! - 3 ! -2!+ (2 * 2)!"
+    expr1 ==> "136"
+
+    let expr2 = Infix.parseOrUndefined "factorial(-1)"
+    expr2 ==> "⧝"
+
+    let expr3 = Infix.parseOrUndefined "(-1)!"
+    expr3 ==> "⧝"
+
+    let expr4 = Infix.parseOrUndefined "factorial(5)"
+    expr4 ==> "120"
+
+    let expr5 = Infix.parseOrUndefined "factorial(25)"
+    expr5 ==> "15511210043330985984000000"
+
+    let expr6 = Infix.parseOrUndefined "factorial(50)"
+    expr6 ==> "30414093201713378043612608166064768844377641568960512000000000000"
+
+    let expr7 = Infix.parseOrUndefined "(x - 1)!"
+    expr7 ==> "gamma(x)"
+

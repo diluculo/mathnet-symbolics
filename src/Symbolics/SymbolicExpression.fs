@@ -230,6 +230,9 @@ type SymbolicExpression(expression:Expression) =
     member this.ArcSech() = SymbolicExpression(Expression.ArcSech(expression))
     member this.ArcCoth() = SymbolicExpression(Expression.ArcCoth(expression))
 
+    member this.Factorial() = SymbolicExpression(Expression.Factorial(expression))
+    member this.Gamma() = SymbolicExpression(Expression.Gamma(expression))
+
     // STRUCTURE
     member this.NumberOfOperands = expression |> Structure.numberOfOperands
     member this.Operand(index:int) = SymbolicExpression(expression |> Structure.operand index)

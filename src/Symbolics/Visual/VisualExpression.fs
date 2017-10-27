@@ -202,6 +202,7 @@ type DefaultVisualStyle() =
         | Coth -> "coth" | Sech -> "sech" | Csch -> "csch"
         | Acosh -> "acosh" | Asinh -> "asinh" | Atanh -> "atanh"
         | Asech -> "asech" | Acsch -> "acsch" | Acoth -> "acoth"
+        | Factorial -> "factorial" | Factorial2 -> "factorial2" | Gamma -> "gamma"
 
     member private this.FromExpression e = VisualExpression.fromExpression this e
 
