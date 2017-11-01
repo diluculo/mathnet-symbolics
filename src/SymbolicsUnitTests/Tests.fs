@@ -1110,7 +1110,7 @@ let ``Expression to delegate compilation``() =
 [<Test>]
 let ``Test for special functions``() =
 
-    let expr0 = Infix.parseOrUndefined "log(x, x)" // + pi*j/2 + sinh(7/2*pi*j + x + y)"
+    let expr0 = Infix.parseOrUndefined "sqrt(j)" // + pi*j/2 + sinh(7/2*pi*j + x + y)"
     expr0 ==> "-1"
 
     let expr1 = Infix.parseOrUndefined "5! - 3 ! -2!+ (2 * 2)!"
