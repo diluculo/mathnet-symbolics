@@ -665,7 +665,7 @@ let ``Print LaTeX expressions`` () =
     LaTeX.format (arctan2 x (3Q*y)) --> """\operatorname{atan2}\left({x}, {3y}\right)"""
 
     LaTeX.format (sin (x+y)) --> """\sin\left(x + y\right)"""
-    LaTeX.format (sin ((x+y) ** 2)) --> """\sin{{\left(x + y\right)}^{2}}"""
+    LaTeX.format (sin ((x+y) ** 2)) --> """\sin\left({x}^{2} + 2xy + {y}^{2}\right)"""
     LaTeX.format ((sin (x+y)) ** 2) --> """{\left(\sin\left(x + y\right)\right)}^{2}"""
     LaTeX.format ((sin x)*(cos x)+(tan x)) --> """\sin{x}\cos{x} + \tan{x}"""
     LaTeX.format ((sin (x+y))*(cos (x+y))+(tan (x+y))) --> """\sin\left(x + y\right)\cos\left(x + y\right) + \tan\left(x + y\right)"""
@@ -758,7 +758,7 @@ let ``Algebraic Expansion`` () =
 
     (x*(y+1)**(3Q/2)+1)*(x*(y+1)**(3Q/2)-1) ==> "(-1 + x*(1 + y)^(3/2))*(1 + x*(1 + y)^(3/2))"
     (x*(y+1)**(3Q/2)+1)*(x*(y+1)**(3Q/2)-1) |> Algebraic.expand |> Algebraic.expand ==> "-1 + x^2 + 3*x^2*y + 3*x^2*y^2 + x^2*y^3"
-    sin(a*(x+y)) |> Algebraic.expand ==> "sin(a*(x + y))" // does not expand
+    sin(a*(x+y)) |> Algebraic.expand ==> "sin(a*x + a*y)" // does not expand
     a/(b*(x+y)) |> Algebraic.expand ===> "a*b^(-1)*(x + y)^(-1)" // strict; does not expand
     a/(b*(x+y)) |> Algebraic.expand ==> "a/(b*(x + y))" // nice; does not expand
 
@@ -777,8 +777,8 @@ let ``Structural Operators`` () =
     Structure.collectFunctionTypes (x*cos(y)) --> [ Cos ]
     Structure.collectFunctions (x*cos(y)) ==+> [ "cos(y)" ]
 
-    Structure.collectNumberValues (x*cos(2*y-4)/3) --> [ -4N; 1N/3N; 2N; ]
-    Structure.collectNumbers (x*cos(2*y-4)/3) ==+> [ "-4"; "1/3"; "2" ]
+    Structure.collectNumberValues (x*cos(2*y-4)/3) --> [ -2N; 1N/3N; 4N; ]
+    Structure.collectNumbers (x*cos(2*y-4)/3) ==+> [ "-2"; "1/3"; "4" ]
 
     Structure.collect (function | Power _ as p -> Some p | _ -> None) ((x+y**z)**(a+b**c)+d) ==+> [ "(x + y^z)^(a + b^c)" ]
     Structure.collectPredicate (function | Power _ -> true | _ -> false) ((x+y**z)**(a+b**c)+d) ==+> [ "(x + y^z)^(a + b^c)" ]
@@ -855,7 +855,7 @@ let ``Algebaric Operators`` () =
     
     Trigonometric.contract (sin(a)*sin(b)) ==> "-cos(a + b)/2 + cos(a - b)/2"
     Trigonometric.contract (sin(a)*cos(b)) ==> "sin(a + b)/2 + sin(a - b)/2"
-    Trigonometric.contract (cos(a)*sin(b)) ==> "sin(a + b)/2 + sin(-a + b)/2"
+    Trigonometric.contract (cos(a)*sin(b)) ==> "sin(a + b)/2 - sin(a - b)/2"
     Trigonometric.contract (cos(a)*cos(b)) ==> "cos(a + b)/2 + cos(a - b)/2"
     Trigonometric.contract (sin(x)**2 + cos(x)**2) ==> "1" // Pythagorean identity
     Trigonometric.simplify (sec(x)**2 - tan(x)**2 - 1) ==> "0"
@@ -905,9 +905,7 @@ let ``Algebaric Operators`` () =
     Trigonometric.substitute (csch(x)) ==> "1/sinh(x)"
     Trigonometric.substitute (sech(x)) ==> "1/cosh(x)"
 
-    // TODO: expected: 0
-    Trigonometric.simplify (sin(x) + sin(y) - 2*sin(x/2+y/2)*cos(x/2-y/2))
-        ==> "sin(y) - sin(x - y)/2 - sin(x/2 - y/2 - (x/2 - y/2))/2 - sin(-x/2 + y/2 - (x/2 - y/2))/2 - sin(x/2 + y/2 - (x/2 - y/2))"
+    Trigonometric.simplify (sin(x) + sin(y) - 2*sin(x/2+y/2)*cos(x/2-y/2)) ==> "0"
 
 [<Test>]
 let ``Differentiation and Taylor Series`` () =

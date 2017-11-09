@@ -381,52 +381,88 @@ module Operators =
     let root n x = pow x (pow n minusOne)
     let sqrt x = root two x
 
-    let abs = function
+    let rec private expandArg (x:Expression) = 
+        let rec expandProduct x y =
+            match x, y with
+            | Sum ax, b | b, Sum ax -> sum <| List.map (expandProduct b) ax
+            | a, b -> multiply a b
+        let rec expandPower x (y:int) =
+            match x, y with
+            | Sum [a], b -> pow a (number b)
+            | Sum (a::ax), n when n > 1 ->
+                let e = int n
+                [for k in 0 .. e -> (k, int <| SpecialFunctions.Binomial(e, k))]
+                |> List.map (fun (k,c) -> expandProduct (multiply (fromInt32 c) (pow a (number(e-k)))) (expandPower (Sum ax) k))
+                |> sum
+            | a, b -> pow a (number b)
+        match x with
+        | Sum ax -> sum <| List.map expandArg ax
+        | Product ax -> List.map expandArg ax |> List.reduce expandProduct
+        | PosIntPower (r, Number n) -> expandPower (expandArg r) (int n)
+        | x -> x
+        
+    let abs x =
+        let x' = expandArg x
+        match x' with
         | Undefined -> undefined
         | oo when isInfinity oo -> infinity
         | Constant I -> one
         | Values.Value v -> Values.abs v
         | Product ((Values.Value v)::ax) when Value.isNegative v -> Function (Abs, multiply (Values.abs v) (Product ax))
-        | x -> Function (Abs, x)
+        | _ -> Function (Abs, x)
 
-    let exp = function
+    let exp x =
+        let x' = expandArg x
+        match x' with
         | Undefined | ComplexInfinity -> undefined
         | Zero -> one
         | One -> Constant E
         | PositiveInfinity -> infinity
         | NegativeInfinity -> zero
-        | x -> Function (Exp, x)
-    let ln = function
+        | _ -> Function (Exp, x)
+    let ln x =
+        let x' = expandArg x
+        match x' with
         | Undefined -> undefined
         | Zero -> negativeInfinity
         | One -> zero
         | Constant E -> one
         | oo when isInfinity oo -> infinity
-        | x -> Function (Ln, x)
-    let log10 = function
+        | _ -> Function (Ln, x)
+    let log10 x =
+        let x' = expandArg x
+        match x' with
         | Undefined -> undefined
         | Zero -> negativeInfinity
         | One -> zero
         | Number n when n.Equals(10N) -> one
         | oo when isInfinity oo -> infinity
-        | x -> Function (Log, x)
+        | _ -> Function (Log, x)
     let log basis x = FunctionN (Log, [basis; x])
 
-    let sin = function
+    let private isNegativeArg = function// if first term is negative, returns (true, -x)
+        | Number n when n.IsNegative -> true, (Number -n)
+        | Product ((Number n)::ax) when n.IsNegative -> true, multiply (Number -n) (Product ax)
+        | Sum ((Number n)::ax) when n.IsNegative -> true, add (Number -n) (Sum (ax |> List.map negate))
+        | Sum (Product ((Number n)::ax)::bx) when n.IsNegative -> true, add (multiply (Number -n) (Product ax)) (Sum (bx |> List.map negate))
+        | x -> false, x
+
+    let rec sin x =
+        let x' = expandArg x
+        match x' with
         | Zero -> zero
-        | Number n when n.IsNegative -> negate (Function (Sin, Number -n))
-        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Sin, multiply (Number -n) (Product ax)))
-        | x -> Function (Sin, x)
-    let cos = function
+        | y -> let (neg, y') = isNegativeArg y
+               if neg then negate (sin y') else Function (Sin, y')
+    let rec cos x =
+        match expandArg x with
         | Zero -> one
-        | Number n when n.IsNegative -> Function (Cos, Number -n)
-        | Product ((Number n)::ax) when n.IsNegative -> Function (Cos, multiply (Number -n) (Product ax))
-        | x -> Function (Cos, x)
-    let tan = function
+        | y -> let (neg, y') = isNegativeArg x
+               if neg then cos y' else Function (Cos, y)
+    let rec tan x =
+        match expandArg x with
         | Zero -> zero
-        | Number n when n.IsNegative -> negate (Function (Tan, Number -n))
-        | Product ((Number n)::ax) when n.IsNegative -> negate (Function (Tan, multiply (Number -n) (Product ax)))
-        | x -> Function (Tan, x)
+        | y -> let (neg, y') = isNegativeArg y
+               if neg then negate (tan y') else Function (Tan, y)
     let csc x = Function (Csc, x)
     let sec x = Function (Sec, x)
     let cot x = Function (Cot, x)
