@@ -883,7 +883,7 @@ let ``Algebaric Operators`` () =
 
     Trigonometric.contract (sinh(a)*sinh(b)) ==> "cosh(a + b)/2 - cosh(a - b)/2"
     Trigonometric.contract (sinh(a)*cosh(b)) ==> "sinh(a + b)/2 + sinh(a - b)/2"
-    Trigonometric.contract (cosh(a)*sinh(b)) ==> "sinh(a + b)/2 + sinh(-a + b)/2"
+    Trigonometric.contract (cosh(a)*sinh(b)) ==> "sinh(a + b)/2 - sinh(a - b)/2"
     Trigonometric.contract (cosh(a)*cosh(b)) ==> "cosh(a + b)/2 + cosh(a - b)/2"
     Trigonometric.contract (sinh(x)**2) ==> "-1/2 + cosh(2*x)/2"
     Trigonometric.contract (sinh(x)**3) ==> "-3/4*sinh(x) + sinh(3*x)/4"
