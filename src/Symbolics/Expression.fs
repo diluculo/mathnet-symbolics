@@ -516,7 +516,9 @@ module Operators =
         match expandArg x with
         | Undefined -> undefined
         | oo when isInfinity oo -> undefined
-        | Zero -> zero // sin(0) = 0        
+
+        | Zero -> zero // sin(0) = 0
+
         | Number n when n.IsNegative -> sin (Number -n) |> negate // sin(-x) = -sin(x)
         | Product ((Number n)::ax) when n.IsNegative -> sin (multiply (Number -n) (Product ax)) |> negate 
         | Sum ((Number n)::ax) when n.IsNegative -> sin (add (Number -n) (Sum (ax |> List.map negate))) |> negate 
