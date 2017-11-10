@@ -426,6 +426,7 @@ module Operators =
         | One -> Constant E
         | PositiveInfinity -> infinity
         | NegativeInfinity -> zero
+        | Function (Ln, x') -> x'
         | _ as x' -> Function (Exp, x')
     let ln x =
         match expandArg x with
@@ -540,6 +541,13 @@ module Operators =
 
         | Product [Number n; Constant Pi] -> exactValue n // sin(m/n*pi)
 
+        | Function (Asin, x') -> x' // sin(asin(x)) = x
+        | Function (Acos, x') -> sqrt (subtract one (pow x' two)) // sin(acos(x)) = sqrt(1 - x^2)
+        | Function (Atan, x') -> divide x' (sqrt (add one (pow x' two))) // sin(atan(x)) = x/sqrt(x^2 + 1)
+        | Function (Acsc, x') -> invert x' // sin(acsc(x)) = 1/x
+        | Function (Asec, x') -> sqrt (subtract one (invert (pow x' two))) // sin(asec(x)) = sqrt(1 - 1/x^2)
+        | Function (Acot, x') -> invert (multiply x' (sqrt (add one (invert (pow x' two))))) // sin(acot(x)) = 1/(x*sqrt(1 + 1/x^2))
+
         | _ as x'-> Function (Sin, x')
     and cos x =
         let rec exactValue (n:BigRational) =
@@ -575,6 +583,13 @@ module Operators =
                     | _ -> Function (Cos, sum ax)
 
         | Product [Number n; Constant Pi] -> exactValue n  // cos(m/n*pi)
+
+        | Function (Asin, x') -> sqrt (subtract one (pow x' two)) // cos(asin(x)) = sqrt(1 - x^2)
+        | Function (Acos, x') -> x' // cos(acos(x)) =x
+        | Function (Atan, x') -> invert (sqrt (add one (pow x' two))) // cos(atan(x)) = 1/sqrt(1 + x^2)
+        | Function (Acsc, x') -> sqrt (subtract one (invert (pow x' two))) // cos(acsc(x)) = sqrt(1 - 1/x^2)
+        | Function (Asec, x') -> invert x' // cos(asec(x)) = 1/x
+        | Function (Acot, x') -> invert (sqrt (add one (invert (pow x' two)))) // cos(acot(x)) = 1/sqrt(1/x^2 + 1)
 
         | _ as x' -> Function (Cos, x')
     and sinh x =
@@ -612,6 +627,13 @@ module Operators =
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // sinh(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
 
+        | Function (Asinh, x') -> x' // sinh(asinh(x)) = x
+        | Function (Acosh, x') -> multiply (add one x') (sqrt (divide (subtract x' one) (add x' one))) // sinh(acosh(x)) = (x + 1)*sqrt((x - 1)/(x + 1))
+        | Function (Atanh, x') -> divide x' (sqrt (subtract one (pow x' two))) // sinh(atanh(x)) = x/sqrt(1 - x^2)
+        | Function (Acsch, x') -> invert x' // sinh(acsch(x)) = 1/x
+        | Function (Asech, x') -> divide (multiply (add x' one) (sqrt (divide (subtract one x') (add x' one)))) x' // sinh(asech(x)) = ((x + 1)*sqrt((1 - x)/(x + 1)))/x
+        | Function (Acoth, x') -> invert (multiply x' (sqrt (subtract one (invert (pow x' two))))) // sinh(acoth(x)) = 1/(x*sqrt(1 - 1/x^2))
+
         | _ as x' -> Function (Sinh, x')
     and cosh x =
         let rec exactValue (n:BigRational) =
@@ -647,6 +669,13 @@ module Operators =
 
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // cosh(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
+
+        | Function (Asinh, x') -> sqrt (add (pow x' two) one) // cosh(asinh(x)) = sqrt(x^2 + 1)
+        | Function (Acosh, x') -> x' // cosh(acosh(x)) = x
+        | Function (Atanh, x') -> invert (sqrt (subtract one (pow x' two))) // cosh(atanh(x)) = 1/sqrt(1 - x^2)
+        | Function (Acsch, x') -> sqrt (add (invert (pow x' two)) one) // cosh(acsch(x)) = sqrt(1/x^2 + 1)
+        | Function (Asech, x') -> invert x' // cosh(asech(x)) = 1/x
+        | Function (Acoth, x') -> invert (sqrt (subtract one (invert (pow x' two)))) // cosh(acoth(x)) = 1/sqrt(1 - 1/x^2)
 
         | _ as x' -> Function (Cosh, x')
     let rec tan x =
@@ -685,6 +714,13 @@ module Operators =
 
         | Product [Number n; Constant Pi] -> exactValue n // tan(m/n*pi)
 
+        | Function (Asin, x') -> divide x' (sqrt (subtract one (pow x' two))) // tan(asin(x)) = x/sqrt(1 - x^2)
+        | Function (Acos, x') -> divide (sqrt (subtract one (pow x' two))) x' // tan(acos(x)) = sqrt(1 - x^2)/x
+        | Function (Atan, x') -> x' // tan(atan(x)) = x
+        | Function (Acsc, x') -> invert (multiply x' (sqrt (subtract one (invert (pow x' two))))) // tan(acsc(x)) = 1/(sqrt(1 - 1/x^2)*x)
+        | Function (Asec, x') -> multiply x' (sqrt (subtract one (invert (pow x' two)))) // tan(asec(x)) = x*sqrt(1 - 1/x^2) 
+        | Function (Acot, x') -> invert x' // tan(acot(x)) = 1/x
+
         | _ as x' -> Function (Tan, x')
     and cot x =
         let rec exactValue (n:BigRational) =
@@ -722,6 +758,13 @@ module Operators =
 
         | Product [Number n; Constant Pi] -> exactValue n // cot(m/n*pi)
 
+        | Function (Asin, x') -> divide (sqrt (subtract one (pow x' two))) x' // cot(asin(x)) = sqrt(1 - x^2)/x
+        | Function (Acos, x') -> divide x' (sqrt (subtract one (pow x' two))) // cot(acos(x)) = x/sqrt(1 - x^2)
+        | Function (Atan, x') -> x' // cot(atan(x)) = 1/x
+        | Function (Acsc, x') -> multiply x' (sqrt (subtract one (invert (pow x' two)))) // cot(acsc(x)) = x*sqrt(1 - 1/x^2) 
+        | Function (Asec, x') -> invert (multiply x' (sqrt (subtract one (invert (pow x' two))))) // cot(asec(x)) = 1/(x*sqrt(1 - 1/x^2))
+        | Function (Acot, x') -> invert x' // cot(acot(x)) = x
+
         | _ as x' -> Function (Cot, x')    
     and tanh x =
         let rec exactValue (n:BigRational) =
@@ -757,6 +800,13 @@ module Operators =
 
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // tanh(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
+
+        | Function (Asinh, x') -> divide x' (sqrt (add (pow x' two) one)) // tanh(asinh(x)) = x/sqrt(x^2 + 1)
+        | Function (Acosh, x') -> divide (multiply (add x' one) (sqrt (divide (subtract x' one) (add x' one)))) x' // tanh(acosh(x)) = ((x + 1)*sqrt((x - 1)/(x + 1)))/x
+        | Function (Atanh, x') -> x' // tanh(atanh(x)) = x
+        | Function (Acsch, x') -> invert (multiply x (sqrt (add (invert (pow x' two)) one))) // tanh(acsch(x)) = 1/(x*sqrt(1/x^2 + 1))
+        | Function (Asech, x') -> multiply (add x' one) (sqrt(divide (subtract one x') (add x' one))) // tanh(asech(x)) = (x + 1)*sqrt((1 - x)/(x + 1)) 
+        | Function (Acoth, x') -> invert x' // tanh(acoth(x)) = 1/x
 
         | _ as x' -> Function (Tanh, x')
     and coth x =
@@ -794,6 +844,13 @@ module Operators =
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // coth(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
 
+        | Function (Asinh, x') -> divide (sqrt (add (pow x' two) one)) x' // coth(asinh(x)) = sqrt(x^2 + 1)/x
+        | Function (Acosh, x') -> divide x' (multiply (add x' one) (sqrt (divide (subtract x' one) (add x' one)))) // coth(acosh(x)) = x/((x + 1)*sqrt((x - 1)/(x + 1)))
+        | Function (Atanh, x') -> invert x' // coth(atanh(x)) = 1/x
+        | Function (Acsch, x') -> multiply x' (sqrt (add (invert (pow x' two)) one)) // coth(acsch(x)) = (x*sqrt(1/x^2 + 1))
+        | Function (Asech, x') -> invert (multiply (add x' one) (sqrt(divide (subtract one x') (add x' one)))) // coth(asech(x)) = 1/((x + 1)*sqrt((1 - x)/(x + 1)))
+        | Function (Acoth, x') -> x' // coth(acoth(x)) = x
+
         | _ as x' -> Function (Coth, x')
     let rec csc x =
         let rec exactValue (n:BigRational) =
@@ -830,6 +887,13 @@ module Operators =
                     | _ -> Function (Csc, sum ax)
 
         | Product [Number n; Constant Pi] -> exactValue n // csc(m/n*pi)
+
+        | Function (Asin, x') -> invert x' // csc(asin(x)) = 1/x
+        | Function (Acos, x') -> invert (sqrt (subtract one (pow x' two))) // csc(acos(x)) = 1/sqrt(1 - x^2)
+        | Function (Atan, x') -> divide (sqrt (add one (pow x' two))) x' // csc(atan(x)) = sqrt(1 + x^2)/x
+        | Function (Acsc, x') -> x' // csc(acsc(x)) = x
+        | Function (Asec, x') -> invert (sqrt (subtract one (invert (pow x' two)))) // csc(asec(x)) = 1/sqrt(1 - 1/x^2)
+        | Function (Acot, x') -> multiply x' (sqrt (add one (invert (pow x' two)))) // csc(acot(x)) = (x*sqrt(1 + 1/x^2))
 
         | _ as x' -> Function (Csc, x')
     and sec x =
@@ -869,6 +933,13 @@ module Operators =
 
         | Product [Number n; Constant Pi] -> exactValue n // sec(m/n*pi)
 
+        | Function (Asin, x') -> invert (sqrt (subtract one (pow x' two))) // sec(asin(x)) = 1/sqrt(1 - x^2)
+        | Function (Acos, x') -> invert x' // sec(acos(x)) = 1/x
+        | Function (Atan, x') -> sqrt (add one (pow x' two)) // sec(atan(x)) = sqrt(1 + x^2)
+        | Function (Acsc, x') -> invert (sqrt (subtract one (invert (pow x' two)))) // sec(acsc(x)) = 1/sqrt(1 - 1/x^2)
+        | Function (Asec, x') -> x' // sec(asec(x)) = x
+        | Function (Acot, x') -> sqrt (add one (invert (pow x' two))) // sec(acot(x)) = sqrt(1 + 1/x^2)
+
         | _ as x' -> Function (Sec, x')
     and csch x =
         let rec exactValue (n:BigRational) =
@@ -902,6 +973,13 @@ module Operators =
 
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // csch(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
+
+        | Function (Asinh, x') -> invert x' // csch(asinh(x)) = 1/x
+        | Function (Acosh, x') -> invert (multiply (add one x') (sqrt (divide (subtract x' one) (add x' one)))) // csch(acosh(x)) = 1/((x + 1)*sqrt((x - 1)/(x + 1)))
+        | Function (Atanh, x') -> divide (sqrt (subtract one (pow x' two))) x' // csch(atanh(x)) = sqrt(1 - x^2)/x
+        | Function (Acsch, x') -> x' // csch(acsch(x)) = x
+        | Function (Asech, x') -> divide x' (multiply (add x' one) (sqrt (divide (subtract one x') (add x' one)))) // csch(asech(x)) = x/((x + 1)*sqrt((1 - x)/(x + 1)))
+        | Function (Acoth, x') -> multiply x' (sqrt (subtract one (invert (pow x' two)))) // csch(acoth(x)) = x*sqrt(1 - 1/x^2)
 
         | _ as x' -> Function (Csch, x')    
     and sech x =
@@ -939,6 +1017,13 @@ module Operators =
         | Product [(Constant Pi); (Constant I);] -> exactValue 1N // sech(m/n*pi*j)
         | Product [(Number n); (Constant Pi); (Constant I);] -> exactValue n
 
+        | Function (Asinh, x') -> invert (sqrt (add (pow x' two) one)) // sech(asinh(x)) = 1/sqrt(x^2 + 1)
+        | Function (Acosh, x') -> invert x' // sech(acosh(x)) = 1/x
+        | Function (Atanh, x') -> sqrt (subtract one (pow x' two)) // sech(atanh(x)) = sqrt(1 - x^2)
+        | Function (Acsch, x') -> invert (sqrt (add (invert (pow x' two)) one)) // sech(acsch(x)) = 1/sqrt(1/x^2 + 1)
+        | Function (Asech, x') -> invert x' // sech(asech(x)) = x
+        | Function (Acoth, x') -> sqrt (subtract one (invert (pow x' two))) // sech(acoth(x)) = sqrt(1 - 1/x^2)
+
         | _ as x' -> Function (Sech, x')    
     let rec arcsin x =
         match expandArg x with
@@ -955,7 +1040,7 @@ module Operators =
         | Product [Number n; Constant I] -> arcsinh (Number n) |> multiply (Constant I)
         | Product ((Number n)::(Constant I)::ax) -> arcsinh (multiply (Number n) (product ax)) |> multiply (Constant I)
         | Product ((Constant I)::ax) -> arcsinh (product ax) |> multiply (Constant I)
-
+        
         | _ as x' -> Function (Asin, x')
     and arccos x =
         match expandArg x with
