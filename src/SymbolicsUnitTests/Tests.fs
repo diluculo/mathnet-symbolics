@@ -1304,8 +1304,8 @@ let ``Test for other trigonometric function``() =
     Calculus.differentiate x expr4  ==> "25*(sec(x) + x*tan(x)*sec(x))"
 
 [<Test>]
-let ``Full Test elementary functions``() =
-
+let ``Exact Values of elementary functions``() =
+    
     // Operator.exp
     exp(-2Q*pi*Constant I) ==> "1"
     exp(-3Q/2Q*pi*Constant I) ==> "j"
@@ -1323,10 +1323,25 @@ let ``Full Test elementary functions``() =
     exp(9Q/4Q*pi*Constant I + x) ==> "exp(9/4*π*j + x)"
     exp(9Q/4Q*pi + x) ==> "exp(9/4*π + x)"
 
-    // Forward-inverse rule
-
     exp(ln(x)) ==> "x"
 
+    // Operators.ln
+    ln(1Q/2Q) ==> "-ln(2)"
+    ln(1Q/Constant E) ==> "-1"
+
+    ln(Constant I) ==> "1/2*π*j"
+    ln(2Q*Constant I) ==> "1/2*π*j + ln(2)"
+    ln(-2Q*Constant I) ==> "-1/2*π*j + ln(2)"
+    ln(-1Q/3Q*Constant I) ==> "-1/2*π*j - ln(3)"
+
+    ln(exp(x)) ==> "ln(exp(x))"
+    ln(exp(5Q)) ==> "5"
+
+    // Operators.log10
+    log10(10Q) ==> "1"
+    log10(1Q/10Q) ==> "-1"
+
+    // Operators.sin
     sin(arcsin(x)) ==> "x"
     sin(arccos(x)) ==> "sqrt(1 - x^2)"
     sin(arctan(x)) ==> "x/sqrt(1 + x^2)"
@@ -1334,6 +1349,9 @@ let ``Full Test elementary functions``() =
     sin(arcsec(x)) ==> "sqrt(1 - 1/x^2)"
     sin(arccot(x)) ==> "1/(sqrt(1 + 1/x^2)*x)"
 
+    sin(pi/4) ==> "2^(-1/2)"
+
+    // Operators.cos
     cos(arcsin(x)) ==> "sqrt(1 - x^2)"
     cos(arccos(x)) ==> "x"
     cos(arctan(x)) ==> "(1 + x^2)^(-1/2)" 
@@ -1341,6 +1359,7 @@ let ``Full Test elementary functions``() =
     cos(arcsec(x)) ==> "1/x"
     cos(arccot(x)) ==> "(1 + 1/x^2)^(-1/2)"
 
+    // Operators.tan
     tan(arcsin(x)) ==> "x/sqrt(1 - x^2)"
     tan(arccos(x)) ==> "sqrt(1 - x^2)/x" 
     tan(arctan(x)) ==> "x"
@@ -1348,6 +1367,7 @@ let ``Full Test elementary functions``() =
     tan(arcsec(x)) ==> "sqrt(1 - 1/x^2)*x"
     tan(arccot(x)) ==> "1/x"
 
+    // Operators.csc
     csc(arcsin(x)) ==> "1/x"
     csc(arccos(x)) ==> "(1 - x^2)^(-1/2)"
     csc(arctan(x)) ==> "sqrt(1 + x^2)/x"
@@ -1355,12 +1375,71 @@ let ``Full Test elementary functions``() =
     csc(arcsec(x)) ==> "(1 - 1/x^2)^(-1/2)"
     csc(arccot(x)) ==> "sqrt(1 + 1/x^2)*x"
 
+    // Operators.sec
     sec(arcsin(x)) ==> "(1 - x^2)^(-1/2)"
     sec(arccos(x)) ==> "1/x"
     sec(arctan(x)) ==> "sqrt(1 + x^2)" 
     sec(arccsc(x)) ==> "(1 - 1/x^2)^(-1/2)"
     sec(arcsec(x)) ==> "x"
     sec(arccot(x)) ==> "sqrt(1 + 1/x^2)"
+
+    // Operators.cot
+    cot(arcsin(x)) ==> "sqrt(1 - x^2)/x"
+    cot(arccos(x)) ==> "x/sqrt(1 - x^2)" 
+    cot(arctan(x)) ==> "1/x"
+    cot(arccsc(x)) ==> "sqrt(1 - 1/x^2)*x"
+    cot(arcsec(x)) ==> "1/(sqrt(1 - 1/x^2)*x)"
+    cot(arccot(x)) ==> "x"
+
+    cot(arcsec(-2Q)) ==> "-3^(-1/2)" // "-1/sqrt(3)"
+
+    // Operators.sinh
+    sinh(arcsinh(x)) ==> "x"
+    sinh(arccosh(x)) ==> "sqrt((-1 + x)/(1 + x))*(1 + x)"
+    sinh(arctanh(x)) ==> "x/sqrt(1 - x^2)"
+    sinh(arccsch(x)) ==> "1/x"
+    sinh(arcsech(x)) ==> "((1 + x)*sqrt((1 - x)/(1 + x)))/x"
+    sinh(arccoth(x)) ==> "1/(sqrt(1 - 1/x^2)*x)"
+
+    // Operators.cosh
+    cosh(arcsinh(x)) ==> "sqrt(1 + x^2)"
+    cosh(arccosh(x)) ==> "x" 
+    cosh(arctanh(x)) ==> "(1 - x^2)^(-1/2)"
+    cosh(arccsch(x)) ==> "sqrt(1 + 1/x^2)"
+    cosh(arcsech(x)) ==> "1/x"
+    cosh(arccoth(x)) ==> "(1 - 1/x^2)^(-1/2)"
+
+    // Operators.tanh
+    tanh(arcsinh(x)) ==> "x/sqrt(1 + x^2)"
+    tanh(arccosh(x)) ==> "(sqrt((-1 + x)/(1 + x))*(1 + x))/x"
+    tanh(arctanh(x)) ==> "x"
+    tanh(arccsch(x)) ==> "1/(sqrt(1 + 1/x^2)*x)"
+    tanh(arcsech(x)) ==> "(1 + x)*sqrt((1 - x)/(1 + x))"
+    tanh(arccoth(x)) ==> "1/x"
+
+    // Operators.csch
+    csch(arcsinh(x)) ==> "1/x"
+    csch(arccosh(x)) ==> "1/(sqrt((-1 + x)/(1 + x))*(1 + x))"
+    csch(arctanh(x)) ==> "sqrt(1 - x^2)/x"
+    csch(arccsch(x)) ==> "x"
+    csch(arcsech(x)) ==> "x/((1 + x)*sqrt((1 - x)/(1 + x)))"
+    csch(arccoth(x)) ==> "sqrt(1 - 1/x^2)*x"
+
+    // Operators.sech
+    sech(arcsinh(x)) ==> "(1 + x^2)^(-1/2)"
+    sech(arccosh(x)) ==> "1/x" 
+    sech(arctanh(x)) ==> "sqrt(1 - x^2)"
+    sech(arccsch(x)) ==> "(1 + 1/x^2)^(-1/2)"
+    sech(arcsech(x)) ==> "x"
+    sech(arccoth(x)) ==> "sqrt(1 - 1/x^2)"
+
+    // Operators.coth
+    coth(arcsinh(x)) ==> "sqrt(1 + x^2)/x"
+    coth(arccosh(x)) ==> "x/(sqrt((-1 + x)/(1 + x))*(1 + x))"
+    coth(arctanh(x)) ==> "1/x"
+    coth(arccsch(x)) ==> "sqrt(1 + 1/x^2)*x"
+    coth(arcsech(x)) ==> "1/((1 + x)*sqrt((1 - x)/(1 + x)))"
+    coth(arccoth(x)) ==> "x"
 
 [<Test>]
 let ``Exponential notation parsing``() =

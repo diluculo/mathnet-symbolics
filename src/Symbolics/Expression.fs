@@ -500,23 +500,30 @@ module Operators =
                     | _ -> Function (Exp, Sum ax)
         | Function (Ln, x') -> x' // exp(ln(x)) = x
         | _ as x' -> Function (Exp, x')
-    let ln x =
+    let rec ln x =
         match expandArg x with
         | Undefined -> undefined
         | oo when isInfinity oo -> infinity
         | Zero -> negativeInfinity
         | One -> zero
+        | Number n when n.Numerator.Equals(1I) && n.IsPositive ->  Function (Ln, fromInteger n.Denominator) |> negate // ln(1/n) = -ln(n) for positive n
         | Constant E -> one
         | Constant I -> divide (multiply pi (Constant I)) two // ln(j) = pi*j/2
-        | Function (Exp, x') when isPositive x' -> x' // ln(exp(x)) = x
+        | Product [Number n; Constant I] when n.IsPositive -> add (ln (Number n)) (divide (multiply pi (Constant I)) two) 
+        | Product [Number n; Constant I] when n.IsNegative -> subtract (ln (Number -n)) (divide (multiply pi (Constant I)) two)
+
+        | Function (Exp, x') when isPositive x' -> x' // ln(exp(x)) = x for x > 0
+        | Power (x', Number n) when n.Equals(-1N) && isPositive x' -> ln x' |> negate // ln(1/x) = -ln(x) for x > 0
+
         | _ as x' -> Function (Ln, x)
-    let log10 x =
+    let rec log10 x =
         match expandArg x with
         | Undefined -> undefined
         | oo when isInfinity oo -> infinity
         | Zero -> negativeInfinity
         | One -> zero
-        | Number n when n.Equals(10N) -> one        
+        | Number n when n.Equals(10N) -> one
+        | Number n when n.Numerator.Equals(1I) && n.IsPositive ->  log10 (fromInteger n.Denominator) |> negate // log10(1/n) = -log10(n) for positive n
         | _ as x' -> Function (Log, x')
     let log basis x = FunctionN (Log, [basis; x])
     
@@ -532,7 +539,6 @@ module Operators =
         match expandArg x with
         | Undefined -> undefined
         | oo when isInfinity oo -> undefined
-
         | Zero -> zero // sin(0) = 0
 
         | Number n when n.IsNegative -> sin (Number -n) |> negate // sin(-x) = -sin(x)
@@ -775,10 +781,10 @@ module Operators =
 
         | Function (Asin, x') -> divide (sqrt (subtract one (pow x' two))) x' // cot(asin(x)) = sqrt(1 - x^2)/x
         | Function (Acos, x') -> divide x' (sqrt (subtract one (pow x' two))) // cot(acos(x)) = x/sqrt(1 - x^2)
-        | Function (Atan, x') -> x' // cot(atan(x)) = 1/x
+        | Function (Atan, x') -> invert x' // cot(atan(x)) = 1/x
         | Function (Acsc, x') -> multiply x' (sqrt (subtract one (invert (pow x' two)))) // cot(acsc(x)) = x*sqrt(1 - 1/x^2) 
         | Function (Asec, x') -> invert (multiply x' (sqrt (subtract one (invert (pow x' two))))) // cot(asec(x)) = 1/(x*sqrt(1 - 1/x^2))
-        | Function (Acot, x') -> invert x' // cot(acot(x)) = x
+        | Function (Acot, x') -> x' // cot(acot(x)) = x
 
         | _ as x' -> Function (Cot, x')    
     and tanh x =
@@ -819,7 +825,7 @@ module Operators =
         | Function (Asinh, x') -> divide x' (sqrt (add (pow x' two) one)) // tanh(asinh(x)) = x/sqrt(x^2 + 1)
         | Function (Acosh, x') -> divide (multiply (add x' one) (sqrt (divide (subtract x' one) (add x' one)))) x' // tanh(acosh(x)) = ((x + 1)*sqrt((x - 1)/(x + 1)))/x
         | Function (Atanh, x') -> x' // tanh(atanh(x)) = x
-        | Function (Acsch, x') -> invert (multiply x (sqrt (add (invert (pow x' two)) one))) // tanh(acsch(x)) = 1/(x*sqrt(1/x^2 + 1))
+        | Function (Acsch, x') -> invert (multiply x' (sqrt (add (invert (pow x' two)) one))) // tanh(acsch(x)) = 1/(x*sqrt(1/x^2 + 1))
         | Function (Asech, x') -> multiply (add x' one) (sqrt(divide (subtract one x') (add x' one))) // tanh(asech(x)) = (x + 1)*sqrt((1 - x)/(x + 1)) 
         | Function (Acoth, x') -> invert x' // tanh(acoth(x)) = 1/x
 
@@ -1036,7 +1042,7 @@ module Operators =
         | Function (Acosh, x') -> invert x' // sech(acosh(x)) = 1/x
         | Function (Atanh, x') -> sqrt (subtract one (pow x' two)) // sech(atanh(x)) = sqrt(1 - x^2)
         | Function (Acsch, x') -> invert (sqrt (add (invert (pow x' two)) one)) // sech(acsch(x)) = 1/sqrt(1/x^2 + 1)
-        | Function (Asech, x') -> invert x' // sech(asech(x)) = x
+        | Function (Asech, x') -> x' // sech(asech(x)) = x
         | Function (Acoth, x') -> sqrt (subtract one (invert (pow x' two))) // sech(acoth(x)) = sqrt(1 - 1/x^2)
 
         | _ as x' -> Function (Sech, x')    
