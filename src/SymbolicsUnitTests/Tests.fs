@@ -1304,6 +1304,65 @@ let ``Test for other trigonometric function``() =
     Calculus.differentiate x expr4  ==> "25*(sec(x) + x*tan(x)*sec(x))"
 
 [<Test>]
+let ``Full Test elementary functions``() =
+
+    // Operator.exp
+    exp(-2Q*pi*Constant I) ==> "1"
+    exp(-3Q/2Q*pi*Constant I) ==> "j"
+    exp(-pi*Constant I) ==> "-1"
+    exp(-1Q/2Q*pi*Constant I) ==> "-j"
+    exp(0Q*pi*Constant I) ==> "1"
+    exp(1Q/2Q*pi*Constant I) ==> "j"
+    exp(pi*Constant I) ==> "-1"
+    exp(3Q/2Q*pi*Constant I) ==> "-j"
+    exp(2Q*pi*Constant I) ==> "1"
+
+    exp(pi*Constant I + x) ==> "-exp(x)"
+    exp(-5Q/2Q*pi*Constant I + x) ==> "-j*exp(x)"
+    exp(1Q/2Q*pi*Constant I + x) ==> "j*exp(x)"
+    exp(9Q/4Q*pi*Constant I + x) ==> "exp(9/4*π*j + x)"
+    exp(9Q/4Q*pi + x) ==> "exp(9/4*π + x)"
+
+    // Forward-inverse rule
+
+    exp(ln(x)) ==> "x"
+
+    sin(arcsin(x)) ==> "x"
+    sin(arccos(x)) ==> "sqrt(1 - x^2)"
+    sin(arctan(x)) ==> "x/sqrt(1 + x^2)"
+    sin(arccsc(x)) ==> "1/x"
+    sin(arcsec(x)) ==> "sqrt(1 - 1/x^2)"
+    sin(arccot(x)) ==> "1/(sqrt(1 + 1/x^2)*x)"
+
+    cos(arcsin(x)) ==> "sqrt(1 - x^2)"
+    cos(arccos(x)) ==> "x"
+    cos(arctan(x)) ==> "(1 + x^2)^(-1/2)" 
+    cos(arccsc(x)) ==> "sqrt(1 - 1/x^2)"
+    cos(arcsec(x)) ==> "1/x"
+    cos(arccot(x)) ==> "(1 + 1/x^2)^(-1/2)"
+
+    tan(arcsin(x)) ==> "x/sqrt(1 - x^2)"
+    tan(arccos(x)) ==> "sqrt(1 - x^2)/x" 
+    tan(arctan(x)) ==> "x"
+    tan(arccsc(x)) ==> "1/(sqrt(1 - 1/x^2)*x)"
+    tan(arcsec(x)) ==> "sqrt(1 - 1/x^2)*x"
+    tan(arccot(x)) ==> "1/x"
+
+    csc(arcsin(x)) ==> "1/x"
+    csc(arccos(x)) ==> "(1 - x^2)^(-1/2)"
+    csc(arctan(x)) ==> "sqrt(1 + x^2)/x"
+    csc(arccsc(x)) ==> "x"
+    csc(arcsec(x)) ==> "(1 - 1/x^2)^(-1/2)"
+    csc(arccot(x)) ==> "sqrt(1 + 1/x^2)*x"
+
+    sec(arcsin(x)) ==> "(1 - x^2)^(-1/2)"
+    sec(arccos(x)) ==> "1/x"
+    sec(arctan(x)) ==> "sqrt(1 + x^2)" 
+    sec(arccsc(x)) ==> "(1 - 1/x^2)^(-1/2)"
+    sec(arcsec(x)) ==> "x"
+    sec(arccot(x)) ==> "sqrt(1 + 1/x^2)"
+
+[<Test>]
 let ``Exponential notation parsing``() =
     let expr = Infix.parseOrUndefined "(-6.40869140625E-05)*x"
     expr ==> "(-6.40869140625E-05)*x"

@@ -133,16 +133,16 @@ module Operators =
 
     let zero = Number BigRational.Zero
     let one = Number BigRational.One
-    let two = Number (BigRational.FromInt 2)
-    let three = Number (BigRational.FromInt 3)
-    let four = Number (BigRational.FromInt 4)
-    let five = Number (BigRational.FromInt 5)
-    let six = Number (BigRational.FromInt 6)
-    let seven = Number (BigRational.FromInt 7)
-    let eight = Number (BigRational.FromInt 8)
-    let nine = Number (BigRational.FromInt 9)
-    let ten = Number (BigRational.FromInt 10)
-    let minusOne = Number (BigRational.FromInt -1)
+    let two = Number 2N
+    let three = Number 3N
+    let four = Number 4N
+    let five = Number 5N
+    let six = Number 6N
+    let seven = Number 7N
+    let eight = Number 8N
+    let nine = Number 9N
+    let ten = Number 10N
+    let minusOne = Number -1N
     let pi = Constant Pi
 
     let symbol (name:string) = Identifier (Symbol name)
@@ -409,45 +409,7 @@ module Operators =
         | Product ax -> List.map expandArg ax |> List.reduce expandProduct
         | PosIntPower (r, Number n) -> expandPower (expandArg r) (int n)
         | x -> x
-    
-    let abs x =
-        match expandArg x with
-        | Undefined -> undefined
-        | oo when isInfinity oo -> infinity
-        | Constant I -> one
-        | Values.Value v -> Values.abs v
-        | Product ((Values.Value v)::ax) when Value.isNegative v -> Function (Abs, multiply (Values.abs v) (Product ax))
-        | _ as x' -> Function (Abs, x')
-
-    let exp x =
-        match expandArg x with
-        | Undefined | ComplexInfinity -> undefined
-        | Zero -> one
-        | One -> Constant E
-        | PositiveInfinity -> infinity
-        | NegativeInfinity -> zero
-        | Function (Ln, x') -> x'
-        | _ as x' -> Function (Exp, x')
-    let ln x =
-        match expandArg x with
-        | Undefined -> undefined
-        | oo when isInfinity oo -> infinity
-        | Zero -> negativeInfinity
-        | One -> zero
-        | Constant E -> one
-        | Constant I -> divide (multiply pi (Constant I)) two // ln(j) = pi*j/2
-        | _ as x' -> Function (Ln, x)
-    let log10 x =
-        match expandArg x with
-        | Undefined -> undefined
-        | oo when isInfinity oo -> infinity
-        | Zero -> negativeInfinity
-        | One -> zero
-        | Number n when n.Equals(10N) -> one        
-        | _ as x' -> Function (Log, x')
-    let log basis x = FunctionN (Log, [basis; x])
-
-    // return a number normalized in [0, 2]. n = p/q = 2*m + p'/q, so p' = p % 2*q
+        // return a number normalized in [0, 2]. n = p/q = 2*m + p'/q, so p' = p % 2*q
     let internal modTwo (n:BigRational) =
         if n >= 0N && n <= 2N then n
         else let divisor = (n.Denominator * 2I)
@@ -455,7 +417,7 @@ module Operators =
              if sign p' >= 0 then BigRational.FromBigIntFraction(p', n.Denominator)
              else BigRational.FromBigIntFraction(p' + divisor, n.Denominator)
     // [a; n*pi; b;] returns (n, [a; b;])
-    let internal findFirstPiTerm ax = 
+    let internal removeFirstPiTerm ax = 
         let rec pick acc = function
             | [] -> 0N, acc
             | x::xs -> match x with
@@ -464,7 +426,7 @@ module Operators =
                         | _ -> pick (acc@[x]) xs
         pick [] ax
     // [a; n*pi*j; b;] returns (n, sum [a; b;])
-    let internal findFirstPiJTerm ax = 
+    let internal removeFirstPiJTerm ax = 
         let rec pick acc = function
             | [] -> 0N, acc
             | x::xs -> match x with
@@ -505,6 +467,59 @@ module Operators =
              (5N/12N), add two (sqrt three); // 2 + sqrt(3)
             ]
 
+    let abs x =
+        match expandArg x with
+        | Undefined -> undefined
+        | oo when isInfinity oo -> infinity
+        | Constant I -> one
+        | Values.Value v -> Values.abs v
+        | Product ((Values.Value v)::ax) when Value.isNegative v -> Function (Abs, multiply (Values.abs v) (Product ax))
+        | _ as x' -> Function (Abs, x')
+
+    let exp x =
+        let rec exactValue (n:BigRational) =
+            let n' = modTwo n // wrap n into [0, 2]
+            match n' with
+            | n' when n'.Equals(0N) || n'.Equals(2N) -> one
+            | n' when n'.Equals(1N/2N) -> Constant I
+            | n' when n'.Equals(1N) -> minusOne
+            | n' when n'.Equals(3N/2N) -> Constant I |> negate
+            | _ -> Function (Exp, Product [Number n; Constant Pi; Constant I])
+        match expandArg x with
+        | Undefined | ComplexInfinity -> undefined
+        | PositiveInfinity -> infinity
+        | NegativeInfinity -> zero
+        | Zero -> one
+        | One -> Constant E
+        | Product [Constant Pi; Constant I] -> minusOne // exp(pi*j) = -1
+        | Product [Number n; Constant Pi; Constant I] when n.IsInteger || n.Denominator = 2I -> exactValue n // exp(m/n*pi*j) where n = 1 or 2
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax
+                    match m with
+                    | m when m.Equals(0N) -> Function (Exp, Sum others)
+                    | m when m.IsInteger || m.Denominator = 2I -> exactValue m |> multiply (Function (Exp, (sum others)))
+                    | _ -> Function (Exp, Sum ax)
+        | Function (Ln, x') -> x' // exp(ln(x)) = x
+        | _ as x' -> Function (Exp, x')
+    let ln x =
+        match expandArg x with
+        | Undefined -> undefined
+        | oo when isInfinity oo -> infinity
+        | Zero -> negativeInfinity
+        | One -> zero
+        | Constant E -> one
+        | Constant I -> divide (multiply pi (Constant I)) two // ln(j) = pi*j/2
+        | Function (Exp, x') when isPositive x' -> x' // ln(exp(x)) = x
+        | _ as x' -> Function (Ln, x)
+    let log10 x =
+        match expandArg x with
+        | Undefined -> undefined
+        | oo when isInfinity oo -> infinity
+        | Zero -> negativeInfinity
+        | One -> zero
+        | Number n when n.Equals(10N) -> one        
+        | _ as x' -> Function (Log, x')
+    let log basis x = FunctionN (Log, [basis; x])
+    
     let rec sin x =
         let rec exactValue (n:BigRational) =
             let n' = modTwo n // wrap n into [0, 2]
@@ -530,7 +545,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> sinh (multiply (Number n) (product ax)) |> multiply (Constant I)
         | Product ((Constant I)::ax) -> sinh (product ax) |> multiply (Constant I)
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // sin(x) has period 2*pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // sin(x) has period 2*pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> cos (sum others) // sin(z + 1/2*pi) = cos(z)
@@ -573,7 +588,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> cosh (multiply (Number n) (product ax))
         | Product ((Constant I)::ax) -> cosh (product ax)
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // cos(x) has period 2*pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // cos(x) has period 2*pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> sin (sum others) |> negate // cos(z + 1/2*pi) = -sin(z)
@@ -615,7 +630,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> sin (multiply (Number n) (product ax)) |> multiply (Constant I)
         | Product ((Constant I)::ax) -> sin (product ax) |> multiply (Constant I)
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax // sinh(x) has period 2*pi*j
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax // sinh(x) has period 2*pi*j
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with 
                     | m' when m'.Equals(1N/2N) -> cosh (sum others) |> multiply (Constant I) // sinh(z + 1/2*pi*j) = j*cosh(z)
@@ -658,7 +673,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> cos (multiply (Number n) (product ax))
         | Product ((Constant I)::ax) -> cos (product ax)
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax // cosh(x) has period 2*pi*j
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax // cosh(x) has period 2*pi*j
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> sinh (sum others) |> multiply (Constant I) // cosh(z + 1/2*pi*j) = j*sinh(z)
@@ -703,7 +718,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> tanh (multiply (Number n) (product ax)) |> multiply (Constant I)
         | Product ((Constant I)::ax) -> tanh (product ax) |> multiply (Constant I)
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // tan(x) has period pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // tan(x) has period pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> cot (sum others) |> negate // tan(z + 1/2*pi) = -cot(z)
@@ -747,7 +762,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> coth (multiply (Number n) (product ax)) |> multiply (Constant I) |> negate
         | Product ((Constant I)::ax) -> coth (product ax) |> multiply (Constant I) |> negate
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // cot(x) has period pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // cot(x) has period pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> tan (sum others) |> negate // cot(z + 1/2*pi) = -tan(z)
@@ -789,7 +804,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> tan (multiply (Number n) (product ax)) |> multiply (Constant I)
         | Product ((Constant I)::ax) -> tan (product ax) |> multiply (Constant I)
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax // tanh(x) has period 2*pi*j
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax // tanh(x) has period 2*pi*j
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> coth (sum others) // tanh(z + 1/2*pi*j) = coth(z)
@@ -832,7 +847,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> cot (multiply (Number n) (product ax)) |> multiply (Constant I) |> negate
         | Product ((Constant I)::ax) -> cot (product ax) |> multiply (Constant I) |> negate
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax // coth(x) has period pi*j
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax // coth(x) has period pi*j
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N) -> coth (sum others) // coth(z + pi*j) = coth(z)
@@ -877,7 +892,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> csch (multiply (Number n) (product ax)) |> multiply (Constant I) |> negate
         | Product ((Constant I)::ax) -> csch (product ax) |> multiply (Constant I) |> negate
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // csc(x) has period 2*pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // csc(x) has period 2*pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> sec (sum others) // csc(z + 1/2*pi) = sec(z)
@@ -922,7 +937,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> sech (multiply (Number n) (product ax))
         | Product ((Constant I)::ax) -> sech (product ax)
 
-        | Sum ax -> let (m, others) = findFirstPiTerm ax // sec(x) has period 2*pi
+        | Sum ax -> let (m, others) = removeFirstPiTerm ax // sec(x) has period 2*pi
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> csc (sum others) |> negate // sec(z + 1/2*pi) = -csc(z)
@@ -962,7 +977,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> csc (multiply (Number n) (product ax)) |> multiply (Constant I) |> negate
         | Product ((Constant I)::ax) -> csc (product ax) |> multiply (Constant I) |> negate
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax 
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax 
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> sech (sum others) |> multiply (Constant I) // csch(z + 1/2*pi*j) = j*sech(z)
@@ -1005,7 +1020,7 @@ module Operators =
         | Product ((Number n)::(Constant I)::ax) -> sec (multiply (Number n) (product ax))
         | Product ((Constant I)::ax) -> sec (product ax)
 
-        | Sum ax -> let (m, others) = findFirstPiJTerm ax 
+        | Sum ax -> let (m, others) = removeFirstPiJTerm ax 
                     let m' = modTwo(m) // wrap in [0, 2]
                     match m' with
                     | m' when m'.Equals(1N/2N) -> csch (sum others) |> multiply (Constant I) |> negate // sech(z + 1/2*pi*j) = -j*csch(z)
