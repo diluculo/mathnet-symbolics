@@ -106,9 +106,9 @@ module private InfixParser =
         opp.AddOperator(InfixOperator("-", ws, 1, Associativity.Left, subtract))
         opp.AddOperator(InfixOperator("*", ws, 2, Associativity.Left, multiply))
         opp.AddOperator(InfixOperator("/", ws, 2, Associativity.Left, divide))
-        opp.AddOperator(InfixOperator("^", ws, 3, Associativity.Right, pow))
-        opp.AddOperator(PrefixOperator("+", ws, 4, true, plus))
-        opp.AddOperator(PrefixOperator("-", ws, 4, true, negate))
+        opp.AddOperator(PrefixOperator("+", ws, 3, true, plus))
+        opp.AddOperator(PrefixOperator("-", ws, 3, true, negate))
+        opp.AddOperator(InfixOperator("^", ws, 4, Associativity.Right, pow))
         expr
 
     let parser : Expression parser = ws >>. expression .>> eof

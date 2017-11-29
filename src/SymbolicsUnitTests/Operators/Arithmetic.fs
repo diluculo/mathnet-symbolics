@@ -7,6 +7,47 @@ open Operators
 let tests =
     testList "Arithmetic" [
 
+        test "Precedence of operators" {
+
+            // In F#, unary minus has higher precedence than exponentiation.
+            // so -1**2 is interpreted as (-1)^2 = 1.
+            -1Q**2Q ==> "1"
+            Quotations.parse <@ -x**2 @> ==> "x^2"
+            // However, in mathematics, unary minus is usually interpreted as "0 -".
+            // Therefore, in Infix parse, we intentionally lowered the precedence of
+            // unary minus operator than exponentiation.
+            Infix.parseOrUndefined "-1^2" ==> "-1"
+            Infix.parseOrUndefined "-(x + y)^2" ==> "-(x + y)^2"
+            Infix.parseOrUndefined "a*exp(-(x-b)^2/(2*c^2))" ==> "a*exp(-(-b + x)^2/(2*c^2))"
+            "-(x + y)^2" |> Infix.parseOrUndefined |> Infix.format |> Infix.parseOrUndefined ==> "-(x + y)^2"
+            // TIP: When in doubt, use parentheses to clarify your intended meaning.
+            -(1Q**2Q) ==> "-1"
+            -((x + y)**2) ==> "-(x + y)^2"
+
+            //
+            // Another ambiguous examples:
+            //
+            // a^b^c is interpreted as a^(b^c) not (a^b)^c = a^(b*c) due to right to left
+            // associativity of the exponent operator.
+            2Q**3Q**4Q ==> "2417851639229258349412352" 
+            Infix.parseOrUndefined "2^3^4" ==> "2417851639229258349412352"
+            // if your intention is (2^3)^4, use parentheses.
+            (2Q**3Q)**4Q ==> "4096"
+            // a/b/c is evaluated as (a/b)/c not a/(b/c) due to left to right associativity
+            // of the divide operator.
+            2Q/3Q/4Q ==> "1/6"
+            Infix.parseOrUndefined "2/3/4" ==> "1/6"
+            // 2^-3*4 is interpreted (2^(-3))*4 = 1/2.
+            Infix.parseOrUndefined "2^-3*4" ==> "1/2"
+            2Q**(-3Q)*4Q ==> "1/2"
+            // if your intention is 2^(-3*4), then use parenthesis
+            2Q**(-3Q*4Q) ==> "1/4096"
+            // In many textbook using implied multiplication, 1/2x is treated as 1/(2*x),
+            // but this product returns (1/2)*x = x/2.
+            1Q/2Q*x ==> "x/2"
+            Infix.parseOrUndefined "1/2*x" ==> "x/2"
+        }
+
         testList "Sum" [
             test "Zero, One & Infinity" {
                 0Q + undefined ==> "Undefined"
