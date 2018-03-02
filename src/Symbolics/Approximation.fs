@@ -147,6 +147,11 @@ module Approximation =
         | Real a -> Real (Trig.Acoth a)
         | Complex a -> Complex (Trig.Acoth a)
 
+    let chebyshevt n x =
+        failwith "not yet supported"
+    let chebyshevu n x =
+        failwith "not yet supported"
+
     let apply f a =
         match f with
         | Abs -> abs a
@@ -177,11 +182,14 @@ module Approximation =
         | Acsch -> acsch a
         | Asech -> asech a
         | Acoth -> acoth a
+        | _ -> failwith "not supported"
 
     let applyN f xs =
         match f, xs with
         | Atan, [x; y] -> atan2 x y
         | Log, [b; x] -> log b x
+        | ChebyshevT, [n; x] -> chebyshevt n x
+        | ChebyshevU, [n; x] -> chebyshevu n x
         | _ -> failwith "not supported"
 
     let isZero = function

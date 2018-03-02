@@ -202,6 +202,7 @@ module private InfixFormatter =
         | Acsc -> "acsc" | Asec -> "asec" | Acot -> "acot"
         | Acosh -> "acosh" | Asinh -> "asinh" | Atanh -> "atanh"
         | Asech -> "asech" | Acsch -> "acsch" | Acoth -> "acoth"
+        | ChebyshevT -> "chebyshevt" | ChebyshevU -> "chebyshevu"
 
     // priority: 1=additive 2=product 3=power
 

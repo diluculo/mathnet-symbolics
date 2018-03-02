@@ -51,6 +51,10 @@ module Calculus =
         | Function (Abs, _) -> failwith "not supported"
         | FunctionN (Atan, [x; y]) -> differentiate symbol (tan (x / y))
         | FunctionN (Log, [b; x]) -> differentiate symbol ((ln x) / (ln b))
+        | FunctionN (ChebyshevT, [n; x]) // dT(n, x) = dx*n*U(n - 1, x)
+            -> (differentiate symbol x) * n * (chebyshevu (n - 1Q) x) 
+        | FunctionN (ChebyshevU, [n; x]) // dU(n, x) = dx*(-x*U(n, x) + (n + 1)*T(n + 1, x)) / (x**2 - 1)
+            -> (differentiate symbol x) * (- x * (chebyshevu n x) + (n + 1Q) * (chebyshevt (n + 1Q) x)) / (pow x 2Q - 1Q)
         | FunctionN (_) -> failwith "not supported"
         | Product [] -> failwith "invalid expression"
 

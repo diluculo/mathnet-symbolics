@@ -711,6 +711,41 @@ module Operators =
         | Product ((Number n)::ax) when n.IsNegative -> Function (Acoth, multiply (Number -n) (Product ax)) |> negate
         | x -> Function (Acoth, x)
 
+    let rec chebyshevt n x =
+        match n, x with
+        | Zero, x -> one;
+        | One, x -> x;
+        | Number n, x when n.IsNegative -> chebyshevt (Number -n) x // T(-n, x) = T(n, x)
+        | Product ((Number a)::ax), x when a.IsNegative -> chebyshevt (multiply (Number -a) (Product ax)) x
+        | n, MinusOne -> pow minusOne n // T(n, -1) = (-1)**n
+        | n, Zero -> n |> multiply (Constant Pi) |> divide two |> cos // T(n, 0) = cos(pi*n/2);
+        | n, One -> one // T(n, 1) = 1        
+        | n, PositiveInfinity -> infinity // T(n, oo) = oo
+        | n, Number x when x.IsNegative -> multiply (pow minusOne n) (chebyshevt n (Number -x))// T(n, -x) = (-1)**n*T(n,x)
+        | n, Product ((Number a)::ax) when a.IsNegative -> multiply (pow minusOne n) (chebyshevt n (multiply (Number -a) (Product ax)))        
+        | n, FunctionN (ChebyshevT, [m; x']) -> chebyshevt (multiply n m) x' // T(n, T(m, x)) = T(n*m, x)
+        | n, Function (Cos, x') -> cos (multiply n x') // T(n, cos(x)) = cos(n*x)
+        | Number n, x when n.IsInteger // T(n, x) = 2*x*T(n-1, x) - T(n-2, x), TODO : use closed form
+            -> subtract (multiply (multiply two x) (chebyshevt (subtract (Number n) one) x)) (chebyshevt (subtract (Number n) two) x)
+        | n, x -> FunctionN(ChebyshevT, [n; x])
+    let rec chebyshevu n x = 
+        match n, x with
+        | MinusOne, x -> zero // U(-1, x) = 0
+        | Zero, x -> one // U(0, x) = 1
+        | One, x -> multiply two x // U(1, x) = 2*x
+        | Number n, x when n.IsNegative -> chebyshevu (subtract (Number -n) two) x |> negate // U(-n, x) = -U(n - 2, x)
+        | Product ((Number a)::ax), x when a.IsNegative -> chebyshevu (subtract (multiply (Number -a) (Product ax)) two) x |> negate
+        | n, MinusOne -> multiply (add n one) (pow minusOne n) // U(n, -1) = (n + 1)*(-1)**n
+        | n, Zero -> n |> multiply (Constant Pi) |> divide two |> cos // U(n, 0) = cos(pi*n/2);
+        | n, One -> add n one // U(n, 1) = n + 1        
+        | n, PositiveInfinity -> infinity // U(n, oo) = oo
+        | n, Number x when x.IsNegative -> multiply (pow minusOne n) (chebyshevu n (Number -x)) // U(n, -x) = (-1)**n*U(n, x)
+        | n, Product ((Number a)::ax) when a.IsNegative -> multiply (pow minusOne n) (chebyshevu n (multiply (Number -a) (Product ax)))
+        | n, Function (Cos, x') -> n |> add one |> multiply x' |> sin |> divide (sin x') // U(n, cos(x)) = sin((n + 1)*x)/sin(x)
+        | Number n, x when n.IsInteger // U(n, x) = 2*x*U(n-1, x) - U(n-2, x), TODO : use closed form
+            -> subtract (multiply (multiply two x) (chebyshevu (subtract (Number n) one) x)) (chebyshevu (subtract (Number n) two) x)        
+        | n, x -> FunctionN(ChebyshevU, [n; x])
+
     let apply f x =
         match f with
         | Abs -> abs x
@@ -741,12 +776,14 @@ module Operators =
         | Acsch -> arccsch x
         | Asech -> arcsech x
         | Acoth -> arccoth x
-
+        | _ -> failwith "not supported"
 
     let applyN (f: Function) (xs: Expression list) =
         match f, xs with
         | Atan, [x;y] -> arctan2 x y
         | Log, [b; x] -> log b x
+        | ChebyshevT, [n;x] -> chebyshevt n x
+        | ChebyshevU, [n;x] -> chebyshevu n x
         | _ -> failwith "not supported"
 
 
@@ -815,6 +852,9 @@ type Expression with
     static member ArcCsch (x) = Operators.arccsch x
     static member ArcSech (x) = Operators.arcsech x
     static member ArcCoth (x) = Operators.arccoth x
+
+    static member ChebyshevT (n, x) = Operators.chebyshevt n x
+    static member ChebyshevU (n, x) = Operators.chebyshevu n x
 
     static member Apply (f, x) = Operators.apply f x
     static member ApplyN (f, xs) = Operators.applyN f xs

@@ -202,6 +202,7 @@ type DefaultVisualStyle() =
         | Acsc -> "acsc" | Asec -> "asec" | Acot -> "acot"
         | Acosh -> "acosh" | Asinh -> "asinh" | Atanh -> "atanh"
         | Acsch -> "acsch" | Asech -> "asech" | Acoth -> "acoth"
+        | ChebyshevT -> "chebyshevt" | ChebyshevU -> "chebyshevu"
 
     member private this.FromExpression e = VisualExpression.fromExpression this e
 

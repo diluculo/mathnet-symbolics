@@ -27,6 +27,8 @@ module private LaTeXFormatter =
     let latexFunctionNName = function
         | "log" -> "\\log"
         | "atan" -> "\\operatorname{atan2}"
+        | "chebyshevt" -> "\\operatorname{chebyshevt}"
+        | "chebyshevu" -> "\\operatorname{chebyshevu}"
         | x -> sprintf "\\operatorname{%s}" x
 
     let private dropParenthesis = function

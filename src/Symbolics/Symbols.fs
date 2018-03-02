@@ -13,6 +13,7 @@ type Function =
     | Acsc | Asec | Acot
     | Asinh | Acosh | Atanh
     | Acsch | Asech | Acoth
+    | ChebyshevT | ChebyshevU
 
 type Constant =
     | E

@@ -235,6 +235,8 @@ type SymbolicExpression(expression:Expression) =
     member this.ArcSech() = SymbolicExpression(Expression.ArcSech(expression))
     member this.ArcCoth() = SymbolicExpression(Expression.ArcCoth(expression))
 
+    member this.ChebyshevT(n:SymbolicExpression) = SymbolicExpression(Expression.ChebyshevT(n.Expression, expression))
+    member this.ChebyshevU(n:SymbolicExpression) = SymbolicExpression(Expression.ChebyshevU(n.Expression, expression))
 
     // STRUCTURE
     member this.NumberOfOperands = expression |> Structure.numberOfOperands

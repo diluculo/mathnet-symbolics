@@ -39,7 +39,7 @@ module Linq =
         | Product ax -> product <| List.map denominator ax
         | _ -> one
 
-    let private toLambda (expr : MathNet.Symbolics.Expression) (args : Symbol list) (valueType : Type) (mathType : Type) constant value add mul div pow atan2 log abs : LambdaExpression option =
+    let private toLambda (expr : MathNet.Symbolics.Expression) (args : Symbol list) (valueType : Type) (mathType : Type) constant value add mul div pow atan2 log abs chebyshevt chebyshevu: LambdaExpression option =
         let valueTypeArr1 = [| valueType |]
         let valueTypeArr2 = [| valueType; valueType |]
         let argName = function |Symbol(n) -> n
@@ -98,6 +98,14 @@ module Linq =
                 let exprX = convertExpr x
                 let exprY = convertExpr y
                 Option.map2 log exprX exprY
+             | FunctionN(ChebyshevT, [x;y]) ->
+                let exprX = convertExpr x
+                let exprY = convertExpr y
+                Option.map2 chebyshevt exprX exprY
+             | FunctionN(ChebyshevU, [x;y]) ->
+                let exprX = convertExpr x
+                let exprY = convertExpr y
+                Option.map2 chebyshevu exprX exprY
              | FunctionN(_) -> None
              | PosIntPower(x, Number(y)) ->
                 let basis = convertExpr x
@@ -174,7 +182,9 @@ module Linq =
         let atan2 = mathCall2 "Atan2"
         let log a b = mathCall2 "Log" b a
         let abs = mathCall1 "Abs"
-        toLambda expr args valueType mathType constant value add mul div pow atan2 log abs
+        let chebyshevt = mathCall2 "ChebyshevT"
+        let chebyshevu = mathCall2 "ChebyshevU"
+        toLambda expr args valueType mathType constant value add mul div pow atan2 log abs chebyshevt chebyshevu
 
     [<CompiledName("FormatComplexLambda")>]
     let formatComplexLambda (expr : MathNet.Symbolics.Expression) (args : Symbol list) : LambdaExpression option =
@@ -201,4 +211,6 @@ module Linq =
             let ln = mathCall1 "Log"
             div (ln b) (ln a)
         let abs a = Expression.Convert(mathCall1 "Abs" a, valueType) :> Expression
-        toLambda expr args valueType mathType constant value add mul div pow atan2 log abs
+        let chebyshevt = mathCall2 "ChebyshevT"
+        let chebyshevu = mathCall2 "ChebyshevU"
+        toLambda expr args valueType mathType constant value add mul div pow atan2 log abs chebyshevt chebyshevu
