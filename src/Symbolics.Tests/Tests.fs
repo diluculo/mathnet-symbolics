@@ -446,12 +446,16 @@ let tests =
 
         test "Evaluate some expression to floating point numbers" {
 
-            let symbols = Map.ofList ["a", FloatingPoint.Real 2.0; "b", FloatingPoint.Real 3.0; "c", FloatingPoint.Complex (complex 1.0 -1.0)]
+            let symbols = Map.ofList ["a", FloatingPoint.Real 2.0; "b", FloatingPoint.Real 3.0; "c", FloatingPoint.Complex (complex 1.0 -1.0); "d", FloatingPoint.Real 0.0]
             Evaluate.evaluate symbols (a) --> FloatingPoint.Real 2.0
             Evaluate.evaluate symbols (1Q/2) --> FloatingPoint.Real 0.5
             Evaluate.evaluate symbols (sin(a) + ln(b)) --> FloatingPoint.Real (System.Math.Sin(2.0) + System.Math.Log(3.0))
             Evaluate.evaluate symbols (a*x**2 + b*x + c |> Structure.substitute x (number 1/2)) --> FloatingPoint.Complex (complex 3.0 -1.0)
             Evaluate.evaluate symbols (1Q/0Q) --> FloatingPoint.ComplexInf
+
+            Evaluate.evaluate symbols (1Q/(1Q/x + a) |> Structure.substitute x (number 0)) --> FloatingPoint.Real 0.0
+            Evaluate.evaluate symbols (1Q/(1Q/d + a) |> Rational.simplify d) --> FloatingPoint.Real 0.0 
+            Evaluate.evaluate symbols (1Q/(1Q/d + a)) --> FloatingPoint.Real 0.0 
 
             Expect.throws (fun () -> Evaluate.evaluate symbols (f) |> ignore) ""
             //(fun () -> Evaluate.evaluate symbols (f) |> ignore) |> should (throwWithMessage "Failed to find symbol: f") typeof<System.Exception>
@@ -461,6 +465,8 @@ let tests =
                 Expect.floatClose Accuracy.veryHigh c.Real 0.0 "Real"
                 Expect.floatClose Accuracy.veryHigh c.Imaginary 1.0 "Imag"
             | _ -> failwith "We expect a complex number here"
+
+           
         }
 
         test "Primitive Equation Solver" {

@@ -90,6 +90,8 @@ module Evaluate =
         | ComplexMatrix x, ComplexMatrix y -> ComplexMatrix (x+y)
         | Undef, _ | _, Undef -> Undef
         | ComplexInf, Infinity | Infinity, ComplexInf -> ComplexInf
+        | ComplexInf, Real y -> ComplexInf
+        | Real x, ComplexInf -> ComplexInf
         | PosInf, NegInf -> Undef
         | PosInf, _ | _, PosInf -> PosInf
         | NegInf, _ | _, NegInf -> NegInf
@@ -118,6 +120,7 @@ module Evaluate =
     let fpower u v =
         match u, v with
         | Real x, Real y when x < 0.0 && (y%1.0 <> 0.0) -> Complex (Complex.pow (complex y 0.0) (complex x 0.0))
+        | Real x, Real y when x = 0.0 && (y < 0.0) -> ComplexInf
         | Real x, Real y -> Real (Math.Pow(x, y))
         | Complex x, Real y -> Complex (Complex.pow (complex y 0.0) x)
         | Real x, Complex y -> Complex (Complex.pow y (complex x 0.0))
@@ -126,6 +129,7 @@ module Evaluate =
         | ComplexInf, Infinity | Infinity, ComplexInf -> ComplexInf
         | Infinity, PosInf -> ComplexInf
         | Infinity, NegInf -> Real (0.0)
+        | ComplexInf, Real y when y < 0.0 -> Real (0.0)
         | _ -> failwith "not supported"
 
     let fapply f u =
