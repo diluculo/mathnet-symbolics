@@ -28,6 +28,6 @@
     <PackageReference Include="Fake.IO.FileSystem" Version="6.0.0" />
     <PackageReference Include="Fake.IO.Zip" Version="6.0.0" />
     <PackageReference Include="Fake.Tools.Git" Version="6.0.0" />
-    <PackageReference Include="MSBuild.StructuredLogger" Version="2.2.100" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.2.356" />
   </ItemGroup>
 </Project>
